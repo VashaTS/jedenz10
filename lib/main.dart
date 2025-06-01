@@ -1,0 +1,315 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:image_picker/image_picker.dart';
+
+void main() {
+  runApp(MaterialApp(
+    title: 'JedenZDziesięciuV3',
+    home: GameScreen(),
+    debugShowCheckedModeBanner: false,
+  ));
+}
+
+class Player {
+  final String name;
+  final ImageProvider icon;
+  int lives;
+  int correctAnswers = 0;
+
+  Player(this.name, this.icon, this.lives);
+}
+
+class GameScreen extends StatefulWidget {
+  @override
+  _GameScreenState createState() => _GameScreenState();
+}
+
+class _GameScreenState extends State<GameScreen> {
+  int numberOfLives = 3;
+  List<Player> players = [];
+  Player? currentPlayer;
+  List<List<String>> questions = [];
+  List<String>? currentQuestion;
+  bool showAnswer = false;
+  int timer = 0;
+  Timer? countdownTimer;
+  String statusMessage = "";
+
+  final List<TextEditingController> playerControllers = [];
+  final List<ImageProvider> playerIcons = [];
+  int step = 0; // 0: wybór szans, 1: dodawanie graczy, 2: gra, 3: koniec gry
+
+  @override
+  void initState() {
+    super.initState();
+    loadCSV();
+  }
+
+  Future<void> loadCSV() async {
+    final raw = await rootBundle.loadString('assets/pytania1z10.csv');
+    final lines = LineSplitter().convert(raw);
+    setState(() {
+      questions = lines
+          .map((line) => line.split(','))
+          .where((q) => q.length >= 2)
+          .toList();
+    });
+  }
+
+  void startQuestion(Player player) {
+    if (questions.isEmpty) return;
+    setState(() {
+      currentPlayer = player;
+      currentQuestion = (questions..shuffle()).removeLast();
+      showAnswer = false;
+      timer = 10 + (currentQuestion![0].length ~/ 10);
+      statusMessage = "";
+    });
+    countdownTimer?.cancel();
+    countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        if (this.timer > 0) {
+          this.timer--;
+        } else {
+          countdownTimer?.cancel();
+          statusMessage = "Czas minął!";
+        }
+      });
+    });
+  }
+
+  void checkGameOver() {
+    if (players.every((p) => p.lives <= 0)) {
+      setState(() {
+        step = 3;
+      });
+    }
+  }
+
+  Future<void> pickImage(int index) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        playerIcons[index] = FileImage(File(pickedFile.path));
+      });
+    }
+  }
+
+  Widget buildPlayerCard(Player player) {
+    return GestureDetector(
+      onTap: () {
+        if (step == 2 && player.lives > 0) startQuestion(player);
+      },
+      child: Container(
+        margin: EdgeInsets.all(8),
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        width: 150,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(backgroundImage: player.icon, radius: 24),
+            SizedBox(height: 8),
+            Text(player.name,
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+            Wrap(
+              spacing: 4,
+              children: List.generate(
+                player.lives,
+                    (index) => Container(
+                  width: 15,
+                  height: 15,
+                  color: Colors.yellow,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    countdownTimer?.cancel();
+    for (var controller in playerControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text("Jeden z dziesięciu V3"),
+        backgroundColor: Colors.blue,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: step == 0
+            ? Column(
+          children: [
+            Text("Wybierz liczbę szans (2-6):"),
+            Wrap(
+              spacing: 10,
+              children: List.generate(
+                5,
+                    (index) => ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      numberOfLives = index + 2;
+                      step = 1;
+                      playerControllers.add(TextEditingController());
+                      playerIcons.add(AssetImage('assets/default_icon.png'));
+                    });
+                  },
+                  child: Text("${index + 2}"),
+                ),
+              ),
+            ),
+          ],
+        )
+            : step == 1
+            ? Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Wprowadź imiona graczy i wybierz piktogramy:"),
+            Expanded(
+              child: ListView.builder(
+                itemCount: playerControllers.length,
+                itemBuilder: (context, index) => Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: playerControllers[index],
+                        decoration: InputDecoration(
+                          labelText: "Gracz ${index + 1}",
+                          errorText: playerControllers[index].text.trim().isEmpty ? 'Imię wymagane' : null,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                    IconButton(
+                      icon: CircleAvatar(backgroundImage: playerIcons[index], radius: 20),
+                      onPressed: () => pickImage(index),
+                    )
+                  ],
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      playerControllers.add(TextEditingController());
+                      playerIcons.add(AssetImage('assets/default_icon.png'));
+                    });
+                  },
+                  child: Text("Dodaj gracza"),
+                ),
+                SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: playerControllers.any((c) => c.text.trim().isEmpty)
+                      ? null
+                      : () {
+                    players = List.generate(
+                      playerControllers.length,
+                          (i) => Player(playerControllers[i].text.trim(), playerIcons[i], numberOfLives),
+                    );
+                    setState(() => step = 2);
+                  },
+                  child: Text("Start gry"),
+                ),
+              ],
+            )
+          ],
+        )
+            : step == 3
+            ? Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Gra zakończona!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            SizedBox(height: 20),
+            ...players.map((p) => Text("${p.name}: ${p.correctAnswers} poprawnych odpowiedzi")),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => GameScreen()),
+              ),
+              child: Text("Zagraj ponownie"),
+            )
+          ],
+        )
+            : currentQuestion != null
+            ? Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(backgroundImage: currentPlayer?.icon, radius: 24),
+                SizedBox(width: 10),
+                Text("Pytanie dla: ${currentPlayer?.name}", style: TextStyle(fontSize: 20)),
+              ],
+            ),
+            SizedBox(height: 10),
+            Text(currentQuestion![0], style: TextStyle(fontSize: 18)),
+            SizedBox(height: 20),
+            Text("Czas: $timer s", style: TextStyle(fontSize: 18, color: timer <= 3 ? Colors.red : Colors.black)),
+            if (statusMessage.isNotEmpty)
+              Text(statusMessage, style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            ElevatedButton(
+              onPressed: () => setState(() => showAnswer = !showAnswer),
+              child: Text("Pokaż odpowiedź"),
+            ),
+            if (showAnswer)
+              Text("Odpowiedź: ${currentQuestion![1]}", style: TextStyle(color: Colors.green, fontSize: 18)),
+            SizedBox(height: 20),
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      currentPlayer?.correctAnswers++;
+                      currentQuestion = null;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: Text("Dobra odpowiedź"),
+                ),
+                SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      currentPlayer?.lives = (currentPlayer?.lives ?? 1) - 1;
+                      currentQuestion = null;
+                      checkGameOver();
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  child: Text("Zła odpowiedź"),
+                ),
+              ],
+            ),
+          ],
+        )
+            : GridView.count(
+          crossAxisCount: 2,
+          children: players.map(buildPlayerCard).toList(),
+        ),
+      ),
+    );
+  }
+}
