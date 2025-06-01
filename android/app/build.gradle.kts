@@ -1,9 +1,25 @@
+import java.util.Properties
+
+val keystoreProps: Properties by lazy {
+    Properties().apply {
+        val propsFile = rootProject.file("key.properties")
+        if (propsFile.exists()) {
+            load(propsFile.inputStream())
+        } else {
+            throw GradleException(
+                "Missing key.properties.  Create it next to build.gradle.kts."
+            )
+        }
+    }
+}
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
 
 android {
     namespace = "com.example.jeden_z_dziesieciu_v2"
@@ -30,11 +46,28 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        // NEW release signing config
+        create("release") {
+            storeFile = file(keystoreProps["storeFile"] as String)
+            storePassword = keystoreProps["storePassword"] as String
+            keyAlias = keystoreProps["keyAlias"] as String
+            keyPassword = keystoreProps["keyPassword"] as String
+        }
+    }
+
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+        getByName("release") {
+            // Switch from debug keys to your new release config
+            signingConfig = signingConfigs.getByName("release")
+
+            // Optional but recommended: shrink and obfuscate
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

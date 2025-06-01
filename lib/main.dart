@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:image_picker/image_picker.dart';
 import 'dart:collection';
+import 'dart:math';
 
 void main() {
   runApp(MaterialApp(
@@ -192,6 +193,13 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final int maxCorrect = players.isNotEmpty
+        ? players.map((p) => p.correctAnswers).reduce(max)
+        : 0;
+
+    final Set<Player> winners =
+    players.where((p) => p.correctAnswers == maxCorrect).toSet();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -203,7 +211,18 @@ class _GameScreenState extends State<GameScreen> {
         child: step == 0
             ? Column(
           children: [
-            Text("Wybierz liczbę szans (2-6):"),
+            if (questions.isEmpty)
+              const Text(
+                "Ładowanie pytań…",
+                style: TextStyle(fontStyle: FontStyle.italic),
+              )
+            else
+              Text(
+                "Załadowano ${questions.length} pytań",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            const SizedBox(height: 12),
+            const Text("Wybierz liczbę szans (2-6):"),
             Wrap(
               spacing: 10,
               children: List.generate(
@@ -285,7 +304,23 @@ class _GameScreenState extends State<GameScreen> {
           children: [
             Text("Gra zakończona!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             SizedBox(height: 20),
-            ...players.map((p) => Text("${p.name}: ${p.correctAnswers} poprawnych odpowiedzi")),
+            ...players.map(
+                  (p) => Row(
+                children: [
+                  if (winners.contains(p))
+                    const Icon(Icons.emoji_events, color: Colors.amber),
+                  const SizedBox(width: 6),
+                  Text(
+                    "${p.name}: ${p.correctAnswers} poprawnych odpowiedzi",
+                    style: TextStyle(
+                      fontWeight:
+                      winners.contains(p) ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => Navigator.pushReplacement(
