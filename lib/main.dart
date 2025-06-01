@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:image_picker/image_picker.dart';
+import 'dart:collection';
 
 void main() {
   runApp(MaterialApp(
@@ -38,6 +39,12 @@ class _GameScreenState extends State<GameScreen> {
   int timer = 0;
   Timer? countdownTimer;
   String statusMessage = "";
+  /// Questions that may be drawn right now
+  late List<List<String>> availableQuestions;
+  /// FIFO buffer of the last N questions that are on “cool-down”
+  final Queue<List<String>> recentQuestions = Queue<List<String>>();
+  /// How many recent questions to hold back
+  static const int recencyWindow = 10;
 
   final List<TextEditingController> playerControllers = [];
   final List<ImageProvider> playerIcons = [];
@@ -50,30 +57,65 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> loadCSV() async {
-    final raw = await rootBundle.loadString('assets/pytania1z10.csv');
+    final raw = await rootBundle.loadString('assets/pytania_clean.csv');
     final lines = LineSplitter().convert(raw);
+
+    final all = lines
+        .map((l) {
+      // "Pytanie";"Odpowiedź"
+      if (!l.startsWith('"') || !l.endsWith('"')) return null;
+      final parts = l.split('";"');
+      if (parts.length != 2) return null;
+      final q = parts[0].substring(1);                   // drop opening "
+      final a = parts[1].substring(0, parts[1].length-1); // drop closing "
+      return [q, a];
+    })
+        .whereType<List<String>>()
+        .toList();
+
     setState(() {
-      questions = lines
-          .map((line) => line.split(','))
-          .where((q) => q.length >= 2)
-          .toList();
+      questions = all;              // keep original for reference (optional)
+      availableQuestions = [...all]; // working pool
     });
   }
 
+
+
   void startQuestion(Player player) {
-    if (questions.isEmpty) return;
+    if (availableQuestions.isEmpty && recentQuestions.isEmpty) return;
+
+    // If the working pool is empty, recycle the cold ones
+    if (availableQuestions.isEmpty) {
+      availableQuestions = recentQuestions.toList();
+      recentQuestions.clear();
+    }
+
+    // Pull a random question that is *not* in the cooldown buffer
+    availableQuestions.shuffle();
+    final nextQ = availableQuestions.removeLast();
+
+    // Add it to the cooldown queue
+    recentQuestions.addLast(nextQ);
+    if (recentQuestions.length > recencyWindow) {
+      // release the oldest question back into circulation
+      availableQuestions.add(recentQuestions.removeFirst());
+    }
+
+    // Standard bookkeeping
     setState(() {
       currentPlayer = player;
-      currentQuestion = (questions..shuffle()).removeLast();
+      currentQuestion = nextQ;
       showAnswer = false;
       timer = 10 + (currentQuestion![0].length ~/ 10);
       statusMessage = "";
     });
+
+    // start / reset countdown
     countdownTimer?.cancel();
-    countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
       setState(() {
-        if (this.timer > 0) {
-          this.timer--;
+        if (timer > 0) {
+          timer--;
         } else {
           countdownTimer?.cancel();
           statusMessage = "Czas minął!";
@@ -81,6 +123,7 @@ class _GameScreenState extends State<GameScreen> {
       });
     });
   }
+
 
   void checkGameOver() {
     if (players.every((p) => p.lives <= 0)) {
