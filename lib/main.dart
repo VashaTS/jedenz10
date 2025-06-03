@@ -46,7 +46,7 @@ class _GameScreenState extends State<GameScreen> {
   final Queue<List<String>> recentQuestions = Queue<List<String>>();
   /// How many recent questions to hold back
   static const int recencyWindow = 10;
-
+  final TextEditingController _livesController = TextEditingController();
   final List<TextEditingController> playerControllers = [];
   final List<ImageProvider> playerIcons = [];
   int step = 0; // 0: wybór szans, 1: dodawanie graczy, 2: gra, 3: koniec gry
@@ -55,6 +55,7 @@ class _GameScreenState extends State<GameScreen> {
   void initState() {
     super.initState();
     loadCSV();
+    _livesController.text = numberOfLives.toString();
   }
 
   Future<void> loadCSV() async {
@@ -167,6 +168,7 @@ class _GameScreenState extends State<GameScreen> {
             SizedBox(height: 10),
             Wrap(
               spacing: 4,
+              runSpacing: 4,
               children: List.generate(
                 player.lives,
                     (index) => Container(
@@ -185,9 +187,8 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void dispose() {
     countdownTimer?.cancel();
-    for (var controller in playerControllers) {
-      controller.dispose();
-    }
+    for (var c in playerControllers) c.dispose();
+    _livesController.dispose();
     super.dispose();
   }
 
@@ -210,35 +211,73 @@ class _GameScreenState extends State<GameScreen> {
         padding: const EdgeInsets.all(16.0),
         child: step == 0
             ? Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (questions.isEmpty)
-              const Text(
-                "Ładowanie pytań…",
-                style: TextStyle(fontStyle: FontStyle.italic),
-              )
+              const Text("Ładowanie pytań…")
             else
-              Text(
-                "Załadowano ${questions.length} pytań",
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text("Załadowano ${questions.length} pytań",
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            const Text("Wybierz liczbę szans (2-6):"),
+
+            const Text("Wybierz liczbę szans:"),
+            TextField(
+              controller: _livesController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: "np. 3",
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12),
+              ),
+              onChanged: (value) {
+                final v = int.tryParse(value);
+                if (v != null && v > 0) {
+                  setState(() => numberOfLives = v);
+                }
+              },
+            ),
+            const SizedBox(height: 8),
+
+            // szybkie przyciski 2-6
             Wrap(
               spacing: 10,
               children: List.generate(
                 5,
-                    (index) => ElevatedButton(
+                    (i) => ElevatedButton(
                   onPressed: () {
+                    final v = i + 2;
                     setState(() {
-                      numberOfLives = index + 2;
+                      numberOfLives = v;
+                      _livesController.text = v.toString(); // nadpisz pole
+                      // od razu przejdź dalej — tak jak wcześniej
                       step = 1;
                       playerControllers.add(TextEditingController());
-                      playerIcons.add(AssetImage('assets/default_icon.png'));
+                      playerIcons.add(
+                        const AssetImage('assets/default_icon.png'),
+                      );
                     });
                   },
-                  child: Text("${index + 2}"),
+                  child: Text("${i + 2}"),
                 ),
               ),
+            ),
+
+            const SizedBox(height: 12),
+            // ręczne potwierdzenie dla wartości wpisanej z klawiatury
+            ElevatedButton(
+              onPressed: () {
+                final v = int.tryParse(_livesController.text) ?? 0;
+                if (v <= 0) return; // opcjonalnie pokaż snackbar/alert
+                setState(() {
+                  numberOfLives = v;
+                  step = 1;
+                  playerControllers.add(TextEditingController());
+                  playerIcons.add(
+                    const AssetImage('assets/default_icon.png'),
+                  );
+                });
+              },
+              child: const Text("Dalej"),
             ),
           ],
         )
@@ -385,6 +424,7 @@ class _GameScreenState extends State<GameScreen> {
         )
             : GridView.count(
           crossAxisCount: 2,
+          childAspectRatio: 0.9,
           children: players.map(buildPlayerCard).toList(),
         ),
       ),
