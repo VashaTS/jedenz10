@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:image_picker/image_picker.dart';
 import 'dart:collection';
-import 'dart:math';
 
 void main() {
   runApp(MaterialApp(
@@ -50,6 +49,20 @@ class _GameScreenState extends State<GameScreen> {
   final List<TextEditingController> playerControllers = [];
   final List<ImageProvider> playerIcons = [];
   int step = 0; // 0: wybór szans, 1: dodawanie graczy, 2: gra, 3: koniec gry
+
+  void _resetToSetup() {
+    setState(() {
+      step = 0;
+      players.clear();
+      currentPlayer = null;
+      currentQuestion = null;
+      countdownTimer?.cancel();
+      timer = 0;
+      for (final c in playerControllers) c.dispose();
+      playerControllers.clear();
+      playerIcons.clear();
+    });
+  }
 
   @override
   void initState() {
@@ -253,7 +266,7 @@ class _GameScreenState extends State<GameScreen> {
                       step = 1;
                       playerControllers.add(TextEditingController());
                       playerIcons.add(
-                        const AssetImage('assets/default_icon.png'),
+                        const AssetImage('assets/default_icon_new.png'),
                       );
                     });
                   },
@@ -273,7 +286,7 @@ class _GameScreenState extends State<GameScreen> {
                   step = 1;
                   playerControllers.add(TextEditingController());
                   playerIcons.add(
-                    const AssetImage('assets/default_icon.png'),
+                    const AssetImage('assets/default_icon_new.png'),
                   );
                 });
               },
@@ -311,30 +324,41 @@ class _GameScreenState extends State<GameScreen> {
             ),
             Row(
               children: [
+                ElevatedButton(                        // ⬅ nowy przycisk
+                  onPressed: _resetToSetup,
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                  child: const Text("Wróć"),
+                ),
+                const SizedBox(width: 12),
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
                       playerControllers.add(TextEditingController());
-                      playerIcons.add(AssetImage('assets/default_icon.png'));
+                      playerIcons.add(const AssetImage('assets/default_icon.png'));
                     });
                   },
-                  child: Text("Dodaj gracza"),
+                  child: const Text("Dodaj gracza"),
                 ),
-                SizedBox(width: 20),
+                const SizedBox(width: 12),
                 ElevatedButton(
                   onPressed: playerControllers.any((c) => c.text.trim().isEmpty)
                       ? null
                       : () {
                     players = List.generate(
                       playerControllers.length,
-                          (i) => Player(playerControllers[i].text.trim(), playerIcons[i], numberOfLives),
+                          (i) => Player(
+                        playerControllers[i].text.trim(),
+                        playerIcons[i],
+                        numberOfLives,
+                      ),
                     );
                     setState(() => step = 2);
                   },
-                  child: Text("Start gry"),
+                  child: const Text("Start gry"),
                 ),
               ],
             )
+
           ],
         )
             : step == 3
@@ -422,10 +446,26 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ],
         )
-            : GridView.count(
-          crossAxisCount: 2,
-          childAspectRatio: 0.9,
-          children: players.map(buildPlayerCard).toList(),
+            : Column(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ElevatedButton(
+                onPressed: _resetToSetup,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                child: const Text("Nowa gra"),
+              ),
+            ),
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                childAspectRatio: 0.75,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                children: players.map(buildPlayerCard).toList(),
+              ),
+            ),
+          ],
         ),
       ),
     );
