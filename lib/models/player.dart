@@ -1,9 +1,10 @@
+import 'package:flutter/material.dart';
+
 class Player {
   final String name;
+  final ImageProvider icon;
   int lives;
-  final int maxLives;
+  int correctAnswers = 0;
 
-  Player({required this.name, required this.lives}) : maxLives = lives;
-
-  bool get isAlive => lives > 0;
+  Player(this.name, this.icon, this.lives);
 }
