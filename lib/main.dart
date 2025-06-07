@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:image_picker/image_picker.dart';
 import 'dart:collection';
+import 'package:audioplayers/audioplayers.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -49,6 +50,7 @@ class _GameScreenState extends State<GameScreen> {
   final List<TextEditingController> playerControllers = [];
   final List<ImageProvider> playerIcons = [];
   int step = 0; // 0: wybór szans, 1: dodawanie graczy, 2: gra, 3: koniec gry
+  late final AudioPlayer _player;
 
   void _resetToSetup() {
     setState(() {
@@ -69,6 +71,7 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
     loadCSV();
     _livesController.text = numberOfLives.toString();
+    _player = AudioPlayer();
   }
 
   Future<void> loadCSV() async {
@@ -202,6 +205,7 @@ class _GameScreenState extends State<GameScreen> {
     countdownTimer?.cancel();
     for (var c in playerControllers) c.dispose();
     _livesController.dispose();
+    _player.dispose();
     super.dispose();
   }
 
@@ -334,7 +338,7 @@ class _GameScreenState extends State<GameScreen> {
                   onPressed: () {
                     setState(() {
                       playerControllers.add(TextEditingController());
-                      playerIcons.add(const AssetImage('assets/default_icon.png'));
+                      playerIcons.add(const AssetImage('assets/default_icon_new.png'));
                     });
                   },
                   child: const Text("Dodaj gracza"),
@@ -421,7 +425,8 @@ class _GameScreenState extends State<GameScreen> {
             Row(
               children: [
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    await _player.play(AssetSource('correct.mp3'));
                     setState(() {
                       currentPlayer?.correctAnswers++;
                       currentQuestion = null;
@@ -432,7 +437,8 @@ class _GameScreenState extends State<GameScreen> {
                 ),
                 SizedBox(width: 20),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    await _player.play(AssetSource('wrong.mp3'));
                     setState(() {
                       currentPlayer?.lives = (currentPlayer?.lives ?? 1) - 1;
                       currentQuestion = null;
