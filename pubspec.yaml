@@ -28,3 +28,4 @@ flutter:
     - assets/default_icon_new.png
     - assets/correct.mp3
     - assets/wrong.mp3
+    - assets/start.mp3

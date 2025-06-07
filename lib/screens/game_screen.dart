@@ -36,12 +36,13 @@ class _GameScreenState extends State<GameScreen> {
   /// FIFO buffer of the last N questions that are on “cool-down”
   final Queue<List<String>> recentQuestions = Queue<List<String>>();
   /// How many recent questions to hold back
-  static const int recencyWindow = 10;
+  // static const int recencyWindow = 10;
   final TextEditingController _livesController = TextEditingController();
   final List<TextEditingController> playerControllers = [];
   final List<ImageProvider> playerIcons = [];
   int step = 0; // 0: wybór szans, 1: dodawanie graczy, 2: gra, 3: koniec gry
   late final AudioPlayer _player;
+  // int _turnIndex = 0;
 
   void _resetToSetup() {
     final gs = context.read<GameSettings>();
@@ -111,7 +112,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // Add it to the cooldown queue
     recentQuestions.addLast(nextQ);
-    if (recentQuestions.length > recencyWindow) {
+    if (recentQuestions.length > gs.recencyWindow) {
       // release the oldest question back into circulation
       availableQuestions.add(recentQuestions.removeFirst());
     }
@@ -127,7 +128,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // start / reset countdown
     if (gs.useTimer) {
-      timer = gs.timeSeconds;
+      timer = gs.timeSeconds+(currentQuestion![0].length ~/ 10);
       // start / reset countdown
       countdownTimer?.cancel();
       countdownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
@@ -155,6 +156,15 @@ class _GameScreenState extends State<GameScreen> {
       });
     }
   }
+  // void _advanceTurn() {
+  //   if (players.where((p) => p.lives > 0).isEmpty) return;
+  //
+  //   do {
+  //     _turnIndex = (_turnIndex + 1) % players.length;
+  //   } while (players[_turnIndex].lives == 0);
+  //
+  //   startQuestion(players[_turnIndex]);
+  // }
 
   Future<void> pickImage(int index) async {
     final picker = ImagePicker();
@@ -183,6 +193,22 @@ class _GameScreenState extends State<GameScreen> {
 
     final Set<Player> winners =
     players.where((p) => p.correctAnswers == maxCorrect).toSet();
+    final alive = players.where((p) => p.lives > 0).toList();
+    final distinctCounts = alive.map((p) => p.answeredCount).toSet().toList()
+      ..sort();                        // rosnąco
+    final Color end = const Color(0xFF32CD32);  // limegreen
+    final Color start   = Colors.blue;  // blue600
+
+    const int steps = 5;
+    final palette = List<Color>.generate(
+      steps,
+          (i) => Color.lerp(start, end, i / (steps - 1))!,
+    );
+
+    final Map<int, Color> countColor = {};
+    for (var i = 0; i < distinctCounts.length; i++) {
+      countColor[distinctCounts[i]] = palette[i % palette.length];
+    }
     final gs = context.read<GameSettings>();
     return Scaffold(
       backgroundColor: Colors.white,
@@ -328,6 +354,9 @@ class _GameScreenState extends State<GameScreen> {
                         numberOfLives,
                       ),
                     );
+                    // _turnIndex = 0;
+                    // startQuestion(players[0]);
+                    _player.play(AssetSource('start.mp3'));
                     setState(() => step = 2);
                   },
                   child: const Text("Start gry"),
@@ -409,9 +438,11 @@ class _GameScreenState extends State<GameScreen> {
                     }
 
                     setState(() {
+                      currentPlayer?.answeredCount++;
                       currentPlayer?.correctAnswers++;
                       currentQuestion = null;
                     });
+                    // _advanceTurn();
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                   child: Text("Dobra odpowiedź"),
@@ -423,10 +454,12 @@ class _GameScreenState extends State<GameScreen> {
                       await _player.play(AssetSource('wrong.mp3'));
                     }
                     setState(() {
+                      currentPlayer?.answeredCount++;
                       currentPlayer?.lives = (currentPlayer?.lives ?? 1) - 1;
                       currentQuestion = null;
                       checkGameOver();
                     });
+                    // _advanceTurn();
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                   child: Text("Zła odpowiedź"),
@@ -456,6 +489,9 @@ class _GameScreenState extends State<GameScreen> {
                   onTap: () {
                     if (step == 2 && p.lives > 0) startQuestion(p);
                   },
+                  bgColor: p.lives == 0
+                      ? Colors.grey.shade700                   // martwi gracze = szare
+                      : countColor[p.answeredCount] ?? Colors.blue,
                 )).toList(),
               ),
             ),

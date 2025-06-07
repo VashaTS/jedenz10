@@ -6,12 +6,14 @@ class GameSettings extends ChangeNotifier {
   int defaultLives;
   bool useTimer;
   int timeSeconds;
+  int recencyWindow;
 
   GameSettings({
     this.soundEnabled = true,
     this.defaultLives = 3,
     this.useTimer     = true,
     this.timeSeconds  = 15,
+    this.recencyWindow = 10,
   });
 
   Future<void> load() async {
@@ -20,6 +22,7 @@ class GameSettings extends ChangeNotifier {
     defaultLives = prefs.getInt('defaultLives') ?? 3;
     useTimer      = prefs.getBool('useTimer')     ?? true;
     timeSeconds   = prefs.getInt('timeSeconds')   ?? 15;
+    recencyWindow  = prefs.getInt('recencyWindow')    ?? 10;
     notifyListeners();
   }
 
@@ -47,5 +50,11 @@ class GameSettings extends ChangeNotifier {
     notifyListeners();
     (await SharedPreferences.getInstance())
         .setInt('timeSeconds', v);
+  }
+  Future<void> setRecencyWindow(int v) async {
+    recencyWindow = v.clamp(10, 200);
+    notifyListeners();
+    (await SharedPreferences.getInstance())
+        .setInt('recencyWindow', recencyWindow);
   }
 }

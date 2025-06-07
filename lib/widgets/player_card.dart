@@ -4,8 +4,9 @@ import '../models/player.dart';
 class PlayerCard extends StatelessWidget {
   final Player player;
   final VoidCallback? onTap;
+  final Color bgColor;
 
-  const PlayerCard({super.key, required this.player, this.onTap});
+  const PlayerCard({super.key, required this.player, this.onTap, required this.bgColor});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +16,7 @@ class PlayerCard extends StatelessWidget {
         margin: const EdgeInsets.all(8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.blue,
+          color: bgColor,
           borderRadius: BorderRadius.circular(12),
         ),
         width: 150,

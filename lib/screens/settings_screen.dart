@@ -68,6 +68,23 @@ class SettingsScreen extends StatelessWidget {
               ),
             ],
           ),
+          const Divider(),
+          Row(
+            children: [
+              const Text('Pytania nie powtórzą się przez:'),
+              const SizedBox(width: 12),
+              DropdownButton<int>(
+                value: gs.recencyWindow,
+                items: const [10, 20, 30, 50, 75, 100, 200]
+                    .map((n) => DropdownMenuItem(value: n, child: Text('$n')))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) gs.setRecencyWindow(v);
+                },
+              ),
+              const Text(' pytań'),
+            ],
+          ),
         ],
       ),
     );
