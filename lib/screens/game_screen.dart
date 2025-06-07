@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/game_settings.dart';
 import '../models/player.dart';
@@ -74,19 +75,19 @@ class _GameScreenState extends State<GameScreen> {
   Future<void> loadCSV() async {
     final raw = await rootBundle.loadString('assets/pytania_clean.csv');
     final lines = LineSplitter().convert(raw);
+    final lineRe = RegExp(r'^"([^"]*)";"([^"]*)"(;"([^"]*)")?$');
+    final all = <List<String>>[];
+    for (final l in lines) {
+      final m = lineRe.firstMatch(l);
+      if (m == null) continue;                // pomiń wadliwy wiersz
 
-    final all = lines
-        .map((l) {
-      // "Pytanie";"Odpowiedź"
-      if (!l.startsWith('"') || !l.endsWith('"')) return null;
-      final parts = l.split('";"');
-      if (parts.length != 2) return null;
-      final q = parts[0].substring(1);                   // drop opening "
-      final a = parts[1].substring(0, parts[1].length-1); // drop closing "
-      return [q, a];
-    })
-        .whereType<List<String>>()
-        .toList();
+      final q = m.group(1)!;                  // pytanie   (zawsze)
+      final a = m.group(2)!;                  // odpowiedź (zawsze)
+      final c = m.group(4);                   // kategoria (może być null)
+
+      all.add([q, a, c ?? '']);
+    }
+
 
     setState(() {
       questions = all;              // keep original for reference (optional)
@@ -356,7 +357,9 @@ class _GameScreenState extends State<GameScreen> {
                     );
                     // _turnIndex = 0;
                     // startQuestion(players[0]);
-                    _player.play(AssetSource('start.mp3'));
+                    if(gs.soundEnabled) {
+                      _player.play(AssetSource('start.mp3'));
+                    }
                     setState(() => step = 2);
                   },
                   child: const Text("Start gry"),
@@ -411,6 +414,19 @@ class _GameScreenState extends State<GameScreen> {
               ],
             ),
             SizedBox(height: 10),
+            if (currentQuestion!.length >= 3 &&
+                currentQuestion![2] != '')
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                child: Text(
+                  "Kategoria: ${currentQuestion![2]}",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
             Text(currentQuestion![0], style: TextStyle(fontSize: 18)),
             SizedBox(height: 20),
             if (gs.useTimer)
@@ -427,7 +443,36 @@ class _GameScreenState extends State<GameScreen> {
               child: Text("Pokaż odpowiedź"),
             ),
             if (showAnswer)
+            Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text("Odpowiedź: ${currentQuestion![1]}", style: TextStyle(color: Colors.green, fontSize: 18)),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.report),
+                label: const Text('Zgłoś błąd w pytaniu'),
+                onPressed: () {
+                  final q = currentQuestion![0];
+                  final a = currentQuestion![1];
+                  final c = (currentQuestion!.length >= 3 &&
+                      currentQuestion![2]?.isNotEmpty == true)
+                      ? '\nKategoria: ${currentQuestion![2]}'
+                      : '';
+
+                  final body = Uri.encodeComponent(
+                    'Pytanie: $q\nOdpowiedź: $a$c\n\n--\nWersja aplikacji: 1.0.0',
+                  );
+
+                  final uri = Uri.parse(
+                    'mailto:sajmon313@gmail.com'
+                        '?subject=Błąd w pytaniu'
+                        '&body=$body',
+                  );
+
+                  launchUrl(uri, mode: LaunchMode.externalApplication);
+                },
+              ),
+            ]
+            ),
             SizedBox(height: 20),
             Row(
               children: [
