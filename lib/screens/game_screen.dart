@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/game_settings.dart';
 import '../models/player.dart';
 import '../widgets/player_card.dart';
+import 'category_screen.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -37,18 +38,17 @@ class _GameScreenState extends State<GameScreen> {
   int timer = 0;
   Timer? countdownTimer;
   String statusMessage = "";
-  /// Questions that may be drawn right now
   late List<List<String>> availableQuestions;
-  /// FIFO buffer of the last N questions that are on “cool-down”
   final Queue<List<String>> recentQuestions = Queue<List<String>>();
-  /// How many recent questions to hold back
   final TextEditingController _livesController = TextEditingController();
   final List<TextEditingController> playerControllers = [];
   final List<ImageProvider> playerIcons = [];
   int step = 0; // 0: wybór szans, 1: dodawanie graczy, 2: gra, 3: koniec gry
   late final AudioPlayer _player;
-  // int _turnIndex = 0;
-  _LastAction? _lastAction;   // NEW
+  _LastAction? _lastAction;
+  late List<String> allCategories;        // pełna lista (unikalne, posort.)
+  late Set<String>  selectedCategories;   // aktualny wybór (podzbiór)
+  late Map<String, int> categoryCounts;
 
   void _resetToSetup() {
     final gs = context.read<GameSettings>();
@@ -64,6 +64,7 @@ class _GameScreenState extends State<GameScreen> {
       for (final c in playerControllers) c.dispose();
       playerControllers.clear();
       playerIcons.clear();
+      _lastAction = null;
     });
   }
 
@@ -92,11 +93,25 @@ class _GameScreenState extends State<GameScreen> {
 
       all.add([q, a, c ?? '']);
     }
-
+    final cats = <String>{};
+    for (final q in all) {
+      final c = q[2];
+      if (c.trim().isNotEmpty) cats.add(c);
+    }
+    final counts = <String, int>{};
+    for (final q in all) {
+      final c = q[2];
+      if (c.trim().isNotEmpty) {
+        counts[c] = (counts[c] ?? 0) + 1;
+      }
+    }
 
     setState(() {
       questions = all;              // keep original for reference (optional)
-      availableQuestions = [...all]; // working pool
+      allCategories      = cats.toList()..sort();
+      categoryCounts     = counts;
+      selectedCategories = {...allCategories};      // domyślnie wszystko zaznaczone
+      availableQuestions = _filterByCategory(all); // working pool
     });
   }
 
@@ -119,6 +134,15 @@ class _GameScreenState extends State<GameScreen> {
       // answeredCount NIE ruszamy
       _lastAction = null;              // przycisk znika po jednej zmianie
     });
+    checkGameOver();
+  }
+
+  List<List<String>> _filterByCategory(List<List<String>> source) {
+    return source.where((q) {
+      final cat = q[2];                   // q[2] może być null
+      // if (cat == null) return true;       // pytania bez kategorii zawsze OK
+      return selectedCategories.contains(cat);
+    }).toList();
   }
 
   void startQuestion(Player player) {
@@ -182,6 +206,26 @@ class _GameScreenState extends State<GameScreen> {
       setState(() {
         step = 3;
 
+      });
+    }
+  }
+
+  void _openCategoryScreen() async {
+    final result = await Navigator.push<Set<String>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CategoryScreen(
+          allCategories: allCategories,
+          initialSelection: selectedCategories,
+          counts: categoryCounts,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        selectedCategories = result;
+        availableQuestions = _filterByCategory(questions);
       });
     }
   }
@@ -279,7 +323,13 @@ class _GameScreenState extends State<GameScreen> {
               },
             ),
             const SizedBox(height: 8),
-
+            if (questions.isNotEmpty)
+              ElevatedButton.icon(
+                icon: const Icon(Icons.list),
+                label: const Text("Kategorie"),
+                onPressed: _openCategoryScreen,
+              ),
+            const SizedBox(height: 8),
             // szybkie przyciski 2-6
             Wrap(
               spacing: 10,
@@ -487,7 +537,7 @@ class _GameScreenState extends State<GameScreen> {
                       : '';
 
                   final body = Uri.encodeComponent(
-                    'Pytanie: $q\nOdpowiedź: $a$c\n\nTwoje uwagi:\n\n\n\n--\nWersja aplikacji: 1.0.0\n--',
+                    'Pytanie: $q\nOdpowiedź: $a$c\n\nTwoje uwagi:\n\n\n\n--\nWersja aplikacji: 1.1.0\n--',
                   );
 
                   final uri = Uri.parse(
