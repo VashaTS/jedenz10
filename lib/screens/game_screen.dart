@@ -42,7 +42,6 @@ class _GameScreenState extends State<GameScreen> {
   /// FIFO buffer of the last N questions that are on “cool-down”
   final Queue<List<String>> recentQuestions = Queue<List<String>>();
   /// How many recent questions to hold back
-  // static const int recencyWindow = 10;
   final TextEditingController _livesController = TextEditingController();
   final List<TextEditingController> playerControllers = [];
   final List<ImageProvider> playerIcons = [];
@@ -234,8 +233,11 @@ class _GameScreenState extends State<GameScreen> {
       countColor[distinctCounts[i]] = palette[i % palette.length];
     }
     final gs = context.read<GameSettings>();
-
-    return Scaffold(
+    final int availableCount = availableQuestions.length;
+    final int recentCount    = recentQuestions.length;
+    return Stack(
+      children: [
+      Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
           title: Text("Jeden z dziesięciu V3"),
@@ -420,10 +422,7 @@ class _GameScreenState extends State<GameScreen> {
             ElevatedButton(
               onPressed: () async {
                 await _player.stop();                // ← zatrzymaj dowolny dźwięk
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const GameScreen()),
-                );
+                _resetToSetup();
               },
               child: const Text("Zagraj ponownie"),
             ),
@@ -483,7 +482,7 @@ class _GameScreenState extends State<GameScreen> {
                   final q = currentQuestion![0];
                   final a = currentQuestion![1];
                   final c = (currentQuestion!.length >= 3 &&
-                      currentQuestion![2]?.isNotEmpty == true)
+                      currentQuestion![2].isNotEmpty == true)
                       ? '\nKategoria: ${currentQuestion![2]}'
                       : '';
 
@@ -498,6 +497,29 @@ class _GameScreenState extends State<GameScreen> {
                   );
 
                   launchUrl(uri, mode: LaunchMode.externalApplication);
+                },
+              ),
+              const SizedBox(width: 12),
+
+              // ------- POMIŃ PYTANIE -------
+              ElevatedButton.icon(
+                icon: const Icon(Icons.skip_next),
+                label: const Text('Pomiń pytanie'),
+                onPressed: () {
+                  // przywróć pytanie do puli i usuń z bufora recency
+                  // if (recentQuestions.isNotEmpty &&
+                  //     identical(recentQuestions.last, currentQuestion)) {
+                  //   recentQuestions.removeLast();
+                  // }
+                  // availableQuestions.add(currentQuestion!);
+
+                  countdownTimer?.cancel();
+                  setState(() {
+                    currentQuestion = null;   // wróć do siatki graczy
+                    showAnswer = false;
+                    statusMessage = "";
+                    timer = 0;
+                  });
                 },
               ),
             ]
@@ -580,6 +602,23 @@ class _GameScreenState extends State<GameScreen> {
           ],
         ),
       ),
-    );
+    ),
+        Positioned(
+          right: 38,
+          top: 8 + MediaQuery.of(context).padding.top,  // pod belką systemową
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black54,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              'Avail: $availableCount\nRecent: $recentCount',
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ),
+    ]);
   }
 }
