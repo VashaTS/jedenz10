@@ -21,6 +21,11 @@ class GameScreen extends StatefulWidget {
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
+class _LastAction {
+  final Player player;
+  final bool wasCorrect; // true = dobra, false = zła
+  _LastAction(this.player, this.wasCorrect);
+}
 
 class _GameScreenState extends State<GameScreen> {
   int numberOfLives = 3;
@@ -44,6 +49,7 @@ class _GameScreenState extends State<GameScreen> {
   int step = 0; // 0: wybór szans, 1: dodawanie graczy, 2: gra, 3: koniec gry
   late final AudioPlayer _player;
   // int _turnIndex = 0;
+  _LastAction? _lastAction;   // NEW
 
   void _resetToSetup() {
     final gs = context.read<GameSettings>();
@@ -95,7 +101,26 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  void _undoLast() {
+    if (_lastAction == null) return;
 
+    setState(() {
+      final act = _lastAction!;
+
+      if (act.wasCorrect) {
+        // było „dobra” → zmieniamy na „zła”
+        act.player.correctAnswers--;   // cofnij punkt
+        act.player.lives--;            // zabierz życie
+      } else {
+        // było „zła” → zmieniamy na „dobra”
+        act.player.lives++;            // oddaj życie
+        act.player.correctAnswers++;   // dodaj punkt
+      }
+
+      // answeredCount NIE ruszamy
+      _lastAction = null;              // przycisk znika po jednej zmianie
+    });
+  }
 
   void startQuestion(Player player) {
     final gs = context.read<GameSettings>();
@@ -149,23 +174,21 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-
   void checkGameOver() {
+    final gs = context.read<GameSettings>();
     if (players.every((p) => p.lives <= 0)) {
+      if(gs.soundEnabled) {
+        _player.play(AssetSource('end.mp3'));
+      }
       setState(() {
         step = 3;
+
       });
     }
   }
-  // void _advanceTurn() {
-  //   if (players.where((p) => p.lives > 0).isEmpty) return;
-  //
-  //   do {
-  //     _turnIndex = (_turnIndex + 1) % players.length;
-  //   } while (players[_turnIndex].lives == 0);
-  //
-  //   startQuestion(players[_turnIndex]);
-  // }
+
+  String capitalize(String s) =>
+      s.isNotEmpty ? s[0].toUpperCase() + s.substring(1) : s;
 
   Future<void> pickImage(int index) async {
     final picker = ImagePicker();
@@ -211,6 +234,7 @@ class _GameScreenState extends State<GameScreen> {
       countColor[distinctCounts[i]] = palette[i % palette.length];
     }
     final gs = context.read<GameSettings>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -394,16 +418,20 @@ class _GameScreenState extends State<GameScreen> {
 
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => GameScreen()),
-              ),
-              child: Text("Zagraj ponownie"),
-            )
+              onPressed: () async {
+                await _player.stop();                // ← zatrzymaj dowolny dźwięk
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const GameScreen()),
+                );
+              },
+              child: const Text("Zagraj ponownie"),
+            ),
           ],
         )
             : currentQuestion != null
             ? Column(
+
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -427,7 +455,8 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                 ),
               ),
-            Text(currentQuestion![0], style: TextStyle(fontSize: 18)),
+
+            Text(capitalize(currentQuestion![0]), style: TextStyle(fontSize: 18)),
             SizedBox(height: 20),
             if (gs.useTimer)
               Text("Czas: $timer s",
@@ -459,7 +488,7 @@ class _GameScreenState extends State<GameScreen> {
                       : '';
 
                   final body = Uri.encodeComponent(
-                    'Pytanie: $q\nOdpowiedź: $a$c\n\n--\nWersja aplikacji: 1.0.0',
+                    'Pytanie: $q\nOdpowiedź: $a$c\n\nTwoje uwagi:\n\n\n\n--\nWersja aplikacji: 1.0.0\n--',
                   );
 
                   final uri = Uri.parse(
@@ -483,9 +512,10 @@ class _GameScreenState extends State<GameScreen> {
                     }
 
                     setState(() {
-                      currentPlayer?.answeredCount++;
-                      currentPlayer?.correctAnswers++;
+                      currentPlayer!.answeredCount++;
+                      currentPlayer!.correctAnswers++;
                       currentQuestion = null;
+                      _lastAction = _LastAction(currentPlayer!, true);
                     });
                     // _advanceTurn();
                   },
@@ -502,6 +532,7 @@ class _GameScreenState extends State<GameScreen> {
                       currentPlayer?.answeredCount++;
                       currentPlayer?.lives = (currentPlayer?.lives ?? 1) - 1;
                       currentQuestion = null;
+                      _lastAction = _LastAction(currentPlayer!, false);
                       checkGameOver();
                     });
                     // _advanceTurn();
@@ -515,13 +546,19 @@ class _GameScreenState extends State<GameScreen> {
         )
             : Column(
           children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: ElevatedButton(
+            Row(
+              children: [ElevatedButton(
                 onPressed: _resetToSetup,
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
                 child: const Text("Nowa gra"),
               ),
+            const SizedBox(width: 12),
+            if (_lastAction != null && step==2)                     // pokaż tylko gdy jest co cofnąć
+        ElevatedButton.icon(
+        onPressed: _undoLast,
+        icon: const Icon(Icons.undo),
+        label: const Text("Zmień ost. Odp"),
+          )]
             ),
             Expanded(
               child: GridView.count(

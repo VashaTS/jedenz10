@@ -30,3 +30,4 @@ flutter:
     - assets/correct.mp3
     - assets/wrong.mp3
     - assets/start.mp3
+    - assets/end.mp3
