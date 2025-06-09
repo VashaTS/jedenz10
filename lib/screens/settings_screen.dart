@@ -36,7 +36,7 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             enabled: gs.useTimer,
             title: const Text('Czas na pytanie (sekundy)'),
-            subtitle: const Text('Zostanie doliczony dodatkowt czas zależnie od długości pytania'),
+            subtitle: const Text('Zostanie doliczony dodatkowy czas zależnie od długości pytania'),
             trailing: DropdownButton<int>(
               value: gs.timeSeconds,
               onChanged: gs.useTimer
