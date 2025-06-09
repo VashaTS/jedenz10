@@ -7,6 +7,7 @@ class GameSettings extends ChangeNotifier {
   bool useTimer;
   int timeSeconds;
   int recencyWindow;
+  bool autoFail;
 
   GameSettings({
     this.soundEnabled = true,
@@ -14,6 +15,7 @@ class GameSettings extends ChangeNotifier {
     this.useTimer     = true,
     this.timeSeconds  = 15,
     this.recencyWindow = 10,
+    this.autoFail      = false,
   });
 
   Future<void> load() async {
@@ -23,6 +25,7 @@ class GameSettings extends ChangeNotifier {
     useTimer      = prefs.getBool('useTimer')     ?? true;
     timeSeconds   = prefs.getInt('timeSeconds')   ?? 15;
     recencyWindow  = prefs.getInt('recencyWindow')    ?? 10;
+    autoFail     = prefs.getBool('autoFail')      ?? false;
     notifyListeners();
   }
 
@@ -56,5 +59,10 @@ class GameSettings extends ChangeNotifier {
     notifyListeners();
     (await SharedPreferences.getInstance())
         .setInt('recencyWindow', recencyWindow);
+  }
+  Future<void> toggleAutoFail() async {
+    autoFail = !autoFail;
+    notifyListeners();
+    (await SharedPreferences.getInstance()).setBool('autoFail', autoFail);
   }
 }

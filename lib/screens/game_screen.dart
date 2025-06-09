@@ -187,6 +187,17 @@ class _GameScreenState extends State<GameScreen> {
           } else {
             countdownTimer?.cancel();
             statusMessage = "Czas minął!";
+            if(gs.autoFail) {
+              // ---------- AUTO-FAIL ----------
+              if(gs.soundEnabled){
+                _player.play(AssetSource('wrong.mp3'));
+              }
+              currentPlayer!.answeredCount++;
+              currentPlayer!.lives--;
+              _lastAction = _LastAction(currentPlayer!, false); // umożliwia “Cofnij”
+              currentQuestion = null;
+              checkGameOver();
+            }
           }
         });
       });

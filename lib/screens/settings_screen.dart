@@ -36,6 +36,7 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             enabled: gs.useTimer,
             title: const Text('Czas na pytanie (sekundy)'),
+            subtitle: const Text('Zostanie doliczony dodatkowt czas zależnie od długości pytania'),
             trailing: DropdownButton<int>(
               value: gs.timeSeconds,
               onChanged: gs.useTimer
@@ -47,6 +48,12 @@ class SettingsScreen extends StatelessWidget {
                 5, 10, 15, 20, 25, 30
               ].map((s) => DropdownMenuItem(value: s, child: Text('$s'))).toList(),
             ),
+          ),
+          SwitchListTile(
+            title: const Text('Auto-fail przy 0 s'),
+            subtitle: const Text('Po upływie czasu pytanie liczy się jako błędne'),
+            value: gs.autoFail,
+            onChanged: (_) => gs.toggleAutoFail(),
           ),
 
           const Divider(),
