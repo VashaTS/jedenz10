@@ -324,7 +324,7 @@ class _GameScreenState extends State<GameScreen> {
             if (questions.isEmpty)
               const Text("Ładowanie pytań…")
             else
-              Text("Załadowano $availableCount pytań",
+              Text("Załadowano $availableCount pytań (użytych $recentCount)",
                   style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
 
