@@ -13,7 +13,9 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/game_settings.dart';
+import '../models/highscore_entry.dart';
 import '../models/player.dart';
+import '../services/highscore_service.dart';
 import '../widgets/player_card.dart';
 import 'category_screen.dart';
 
@@ -222,6 +224,15 @@ class _GameScreenState extends State<GameScreen> {
       if(gs.soundEnabled) {
         _player.play(AssetSource('end.mp3'));
       }
+      final now = DateTime.now();
+      for (final p in players) {
+        if (p.correctAnswers > 0) {
+          HighscoreService.add(
+            numberOfLives,
+            HighscoreEntry(p.name, p.correctAnswers, now),
+          );
+        }
+      }
       setState(() {
         step = 3;
 
@@ -392,6 +403,11 @@ class _GameScreenState extends State<GameScreen> {
                 });
               },
               child: const Text("Dalej"),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/hiscore'),
+              child: const Text('Hiscore'),
             ),
           ],
         )

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeden_z_dziesieciu/screens/hiscore_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'models/game_settings.dart';
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/':        (_) => const GameScreen(),
         '/settings':(_) => const SettingsScreen(),
+        '/hiscore': (_) => const HighscoreScreen(),
       },
     );
   }
