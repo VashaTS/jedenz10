@@ -8,6 +8,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:image_picker/image_picker.dart';
+import 'package:jeden_z_dziesieciu/models/caregory_result.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -49,6 +50,7 @@ class _GameScreenState extends State<GameScreen> {
   late List<String> allCategories;        // pełna lista (unikalne, posort.)
   late Set<String>  selectedCategories;   // aktualny wybór (podzbiór)
   late Map<String, int> categoryCounts;
+  bool includeAIQuestions = true;
 
   void _resetToSetup() {
     final gs = context.read<GameSettings>();
@@ -137,12 +139,15 @@ class _GameScreenState extends State<GameScreen> {
     checkGameOver();
   }
 
+  bool _isAllowed(List<String> q) {
+    final cat = q[2];
+    final aiQuestion = q[0].contains('🤖');
+    if (!includeAIQuestions && aiQuestion) return false;
+    return selectedCategories.contains(cat);
+  }
+
   List<List<String>> _filterByCategory(List<List<String>> source) {
-    return source.where((q) {
-      final cat = q[2];                   // q[2] może być null
-      // if (cat == null) return true;       // pytania bez kategorii zawsze OK
-      return selectedCategories.contains(cat);
-    }).toList();
+    return source.where(_isAllowed).toList();
   }
 
   void startQuestion(Player player) {
@@ -163,7 +168,10 @@ class _GameScreenState extends State<GameScreen> {
     recentQuestions.addLast(nextQ);
     if (recentQuestions.length > gs.recencyWindow) {
       // release the oldest question back into circulation
-      availableQuestions.add(recentQuestions.removeFirst());
+      final oldest = recentQuestions.removeFirst();
+      if(_isAllowed(oldest)) {
+        availableQuestions.add(oldest);
+      }
     }
 
     // Standard bookkeeping
@@ -222,12 +230,13 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _openCategoryScreen() async {
-    final result = await Navigator.push<Set<String>>(
+    final result = await Navigator.push<CategoryResult>(
       context,
       MaterialPageRoute(
         builder: (_) => CategoryScreen(
           allCategories: allCategories,
           initialSelection: selectedCategories,
+          includeAI: includeAIQuestions,
           counts: categoryCounts,
         ),
       ),
@@ -235,8 +244,10 @@ class _GameScreenState extends State<GameScreen> {
 
     if (result != null) {
       setState(() {
-        selectedCategories = result;
+        selectedCategories = result.sel;
+        includeAIQuestions  = result.ai;
         availableQuestions = _filterByCategory(questions);
+        recentQuestions.removeWhere((q)=> !_isAllowed(q));
       });
     }
   }
@@ -313,7 +324,7 @@ class _GameScreenState extends State<GameScreen> {
             if (questions.isEmpty)
               const Text("Ładowanie pytań…")
             else
-              Text("Załadowano ${questions.length} pytań",
+              Text("Załadowano $availableCount pytań",
                   style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
 
@@ -469,7 +480,7 @@ class _GameScreenState extends State<GameScreen> {
                     const Icon(Icons.emoji_events, color: Colors.amber),
                   const SizedBox(width: 6),
                   Text(
-                    "${p.name}: ${p.correctAnswers} poprawnych odpowiedzi",
+                    "${p.name}: ${p.correctAnswers}  / ${p.answeredCount} poprawnych odpowiedzi",
                     style: TextStyle(
                       fontWeight:
                       winners.contains(p) ? FontWeight.bold : FontWeight.normal,
@@ -548,7 +559,7 @@ class _GameScreenState extends State<GameScreen> {
                       : '';
 
                   final body = Uri.encodeComponent(
-                    'Pytanie: $q\nOdpowiedź: $a$c\n\nTwoje uwagi:\n\n\n\n--\nWersja aplikacji: 1.1.0\n--',
+                    'Pytanie: $q\nOdpowiedź: $a$c\n\nTwoje uwagi:\n\n\n\n--\nWersja aplikacji: 1.2.0\n--',
                   );
 
                   final uri = Uri.parse(
@@ -664,22 +675,22 @@ class _GameScreenState extends State<GameScreen> {
         ),
       ),
     ),
-        Positioned(
-          right: 38,
-          top: 8 + MediaQuery.of(context).padding.top,  // pod belką systemową
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.black54,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              'Avail: $availableCount\nRecent: $recentCount',
-              style: const TextStyle(color: Colors.white, fontSize: 12),
-              textAlign: TextAlign.right,
-            ),
-          ),
-        ),
+        // Positioned(
+        //   right: 38,
+        //   top: 8 + MediaQuery.of(context).padding.top,  // pod belką systemową
+        //   child: Container(
+        //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        //     decoration: BoxDecoration(
+        //       color: Colors.black54,
+        //       borderRadius: BorderRadius.circular(6),
+        //     ),
+        //     child: Text(
+        //       'Avail: $availableCount\nRecent: $recentCount',
+        //       style: const TextStyle(color: Colors.white, fontSize: 12),
+        //       textAlign: TextAlign.right,
+        //     ),
+        //   ),
+        // ),
     ]);
   }
 }

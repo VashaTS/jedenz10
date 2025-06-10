@@ -55,7 +55,7 @@ class GameSettings extends ChangeNotifier {
         .setInt('timeSeconds', v);
   }
   Future<void> setRecencyWindow(int v) async {
-    recencyWindow = v.clamp(10, 200);
+    recencyWindow = v.clamp(10, 1000);
     notifyListeners();
     (await SharedPreferences.getInstance())
         .setInt('recencyWindow', recencyWindow);

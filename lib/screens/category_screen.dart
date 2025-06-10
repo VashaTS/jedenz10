@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:jeden_z_dziesieciu/models/caregory_result.dart';
 
 class CategoryScreen extends StatefulWidget {
   final List<String> allCategories;
   final Set<String>  initialSelection;
   final Map<String, int> counts;
+  final bool includeAI;
 
   const CategoryScreen({
     super.key,
     required this.allCategories,
     required this.initialSelection,
     required this.counts,
+    required this.includeAI,
   });
 
   @override
@@ -18,11 +21,13 @@ class CategoryScreen extends StatefulWidget {
 
 class _CategoryScreenState extends State<CategoryScreen> {
   late Set<String> _current;
+  late bool _includeAI;
 
   @override
   void initState() {
     super.initState();
     _current = {...widget.initialSelection};
+    _includeAI = widget.includeAI;
   }
 
   @override
@@ -32,14 +37,48 @@ class _CategoryScreenState extends State<CategoryScreen> {
         title: const Text('Kategorie pytań'),
         backgroundColor: Colors.blue,
         actions: [
-          TextButton(
-            onPressed: () => setState(() => _current = {...widget.allCategories}),
-            child: const Text('Zaznacz wszystkie', style: TextStyle(color: Colors.white)),
+      PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert),
+      onSelected: (val) => setState(() {
+        switch (val) {
+          case 'all':   // Zaznacz wszystko
+            _current = {...widget.allCategories};
+            break;
+          case 'none':  // Odznacz wszystko
+            _current.clear();
+            break;
+          case 'invert': // Odwróć
+            final allSet = widget.allCategories.toSet();
+            _current = allSet.difference(_current).toSet();
+        }
+      }),
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'all',
+          child: Text('Zaznacz wszystko'),
+        ),
+        const PopupMenuItem(
+          value: 'none',
+          child: Text('Odznacz wszystko'),
+        ),
+        const PopupMenuItem(
+          value: 'invert',
+          child: Text('Odwróć zaznaczenie'),
+        ),
+      ],
+    ),
+    ],
           ),
-        ],
-      ),
+
       body: ListView(
-        children: widget.allCategories.map((cat) {
+        children: [
+          SwitchListTile(
+            title: const Text('Pytania generowane przez 🤖'),
+            value: _includeAI,
+            onChanged: (v) => setState(() => _includeAI = v),
+          ),
+          const Divider(),
+          ...widget.allCategories.map((cat) {
           final checked = _current.contains(cat);
           return CheckboxListTile(
             title: Row(
@@ -60,13 +99,16 @@ class _CategoryScreenState extends State<CategoryScreen> {
               });
             },
           );
-        }).toList(),
+        }).toList(),]
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pop(context, _current),
-        icon: const Icon(Icons.check),
-        label: const Text('Użyj'),
-      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(right: 32),
+        child: FloatingActionButton.extended(
+          onPressed: () => Navigator.pop(context,CategoryResult(_current,_includeAI)),
+          icon: const Icon(Icons.check),
+          label: const Text('Użyj'),
+        ),
+      )
     );
   }
 }

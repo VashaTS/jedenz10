@@ -53,7 +53,9 @@ class SettingsScreen extends StatelessWidget {
             title: const Text('Auto-fail przy 0 s'),
             subtitle: const Text('Po upływie czasu pytanie liczy się jako błędne'),
             value: gs.autoFail,
-            onChanged: (_) => gs.toggleAutoFail(),
+            onChanged: gs.useTimer
+              ? (_) => gs.toggleAutoFail()
+              : null,
           ),
 
           const Divider(),
@@ -85,7 +87,7 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(width: 12),
               DropdownButton<int>(
                 value: gs.recencyWindow,
-                items: const [10, 20, 30, 50, 75, 100, 200]
+                items: const [10, 20, 30, 50, 75, 100, 200, 500]
                     .map((n) => DropdownMenuItem(value: n, child: Text('$n')))
                     .toList(),
                 onChanged: (v) {
