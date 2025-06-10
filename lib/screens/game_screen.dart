@@ -218,21 +218,30 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  void _saveHiscore() async {
+    final now = DateTime.now();
+    final int best = players.map((p) => p.correctAnswers).reduce(max);
+
+    if (best == 0) return;                       // nikt nie odpowiedział
+
+    for (final p in players) {
+      if (p.correctAnswers == best) {            // tylko zwycięzcy
+        await HighscoreService.add(
+          numberOfLives,
+          HighscoreEntry(p.name, p.correctAnswers, now),
+        );
+      }
+    }
+  }
+
+
   void checkGameOver() {
     final gs = context.read<GameSettings>();
     if (players.every((p) => p.lives <= 0)) {
       if(gs.soundEnabled) {
         _player.play(AssetSource('end.mp3'));
       }
-      final now = DateTime.now();
-      for (final p in players) {
-        if (p.correctAnswers > 0) {
-          HighscoreService.add(
-            numberOfLives,
-            HighscoreEntry(p.name, p.correctAnswers, now),
-          );
-        }
-      }
+      _saveHiscore();
       setState(() {
         step = 3;
 

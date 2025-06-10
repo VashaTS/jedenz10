@@ -29,6 +29,7 @@ class _HighscoreScreenState extends State<HighscoreScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tablica wyników'),
+        backgroundColor: Colors.blue,
       ),
       body: Column(
         children: [
