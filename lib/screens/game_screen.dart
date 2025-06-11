@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:image_picker/image_picker.dart';
@@ -230,6 +231,15 @@ class _GameScreenState extends State<GameScreen> {
           numberOfLives,
           HighscoreEntry(p.name, p.correctAnswers, now),
         );
+        await FirebaseFirestore.instance
+            .collection('highscore')
+            .doc(numberOfLives.toString())
+            .collection('scores')
+            .add({
+              'name': p.name,
+              'score': p.correctAnswers,
+              'date': FieldValue.serverTimestamp(),
+            });
       }
     }
   }
@@ -347,7 +357,19 @@ class _GameScreenState extends State<GameScreen> {
               Text("Załadowano $availableCount pytań (użytych $recentCount)",
                   style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-
+            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              if (questions.isNotEmpty) ElevatedButton.icon(
+                icon: const Icon(Icons.list),
+                label: const Text("Kategorie"),
+                onPressed: _openCategoryScreen,
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pushNamed(context, '/hiscore'),
+                child: const Text('Hiscore'),
+              ),
+            ]),
+            const SizedBox(height: 8),
             const Text("Wybierz liczbę szans:"),
             TextField(
               controller: _livesController,
@@ -365,13 +387,9 @@ class _GameScreenState extends State<GameScreen> {
               },
             ),
             const SizedBox(height: 8),
-            if (questions.isNotEmpty)
-              ElevatedButton.icon(
-                icon: const Icon(Icons.list),
-                label: const Text("Kategorie"),
-                onPressed: _openCategoryScreen,
-              ),
-            const SizedBox(height: 8),
+
+
+
             // szybkie przyciski 2-6
             Wrap(
               spacing: 10,
@@ -413,11 +431,8 @@ class _GameScreenState extends State<GameScreen> {
               },
               child: const Text("Dalej"),
             ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/hiscore'),
-              child: const Text('Hiscore'),
-            ),
+            // const SizedBox(height: 12),
+
           ],
         )
             : step == 1

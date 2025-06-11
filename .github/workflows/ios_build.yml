@@ -1,0 +1,52 @@
+name: iOS Release (EU-web)
+
+on:
+  push:
+    branches: [ main ]          # or whatever your default branch is
+  workflow_dispatch:            # lets you trigger it manually
+
+jobs:
+  build-ios:
+    runs-on: macos-14           # GitHub’s Xcode 15.3 image
+    timeout-minutes: 60
+
+    steps:
+      # 1 — fetch your code
+      - uses: actions/checkout@v4
+
+      # 2 — install Flutter
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: stable
+          cache: true           # speeds up repeated runs
+
+      # 3 — install Ruby/Fastlane & CocoaPods
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.2
+          bundler-cache: true
+
+      - name: iOS dependencies
+        run: |
+          brew install cocoapods
+          pod repo update
+          bundle install
+        working-directory: ios
+
+      # 4 — build, sign and notarise (Fastlane lane lives in ios/fastlane/Fastfile)
+      - name: Fastlane – build_web
+        env:
+          CI_CERT_P12:  ${{ secrets.CI_CERT_P12 }}
+          CI_CERT_PW:   ${{ secrets.CI_CERT_PW }}
+          CI_PROFILE:   ${{ secrets.CI_PROFILE }}
+          ASC_KEY_P8:   ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_ID:   ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: bundle exec fastlane build_web
+        working-directory: ios
+
+      # 5 — upload the finished IPA so you can download it from the run
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MyApp-Web-Release
+          path: ios/build/Runner.ipa
