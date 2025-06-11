@@ -1,11 +1,20 @@
+// ===============================
+//  file: lib/models/player.dart
+// ===============================
 import 'package:flutter/material.dart';
 
 class Player {
   final String name;
   final ImageProvider icon;
   int lives;
-  int correctAnswers = 0;
-  int answeredCount = 0;
+  int answeredCount;
+  int correctAnswers;
 
-  Player(this.name, this.icon, this.lives);
+  Player(
+      this.name,
+      this.icon,
+      this.lives, {
+        this.answeredCount = 0,
+        this.correctAnswers = 0,
+      });
 }
