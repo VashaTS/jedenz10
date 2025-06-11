@@ -9,6 +9,7 @@ class Player {
   int lives;
   int answeredCount;
   int correctAnswers;
+  int points;
 
   Player(
       this.name,
@@ -16,5 +17,6 @@ class Player {
       this.lives, {
         this.answeredCount = 0,
         this.correctAnswers = 0,
+        this.points = 0
       });
 }

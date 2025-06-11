@@ -9,60 +9,64 @@ class GameSettings extends ChangeNotifier {
   int recencyWindow;
   bool autoFail;
 
-  GameSettings({
-    this.soundEnabled = true,
-    this.defaultLives = 3,
-    this.useTimer     = true,
-    this.timeSeconds  = 15,
-    this.recencyWindow = 10,
-    this.autoFail      = false,
+  final SharedPreferences _prefs;
+
+  GameSettings._(
+    this._prefs,{
+      required this.soundEnabled,
+      required this.defaultLives,
+      required this.useTimer,
+      required this.timeSeconds,
+      required this.recencyWindow,
+      required this.autoFail,
   });
 
-  Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    soundEnabled = prefs.getBool('sound') ?? true;
-    defaultLives = prefs.getInt('defaultLives') ?? 3;
-    useTimer      = prefs.getBool('useTimer')     ?? true;
-    timeSeconds   = prefs.getInt('timeSeconds')   ?? 15;
-    recencyWindow  = prefs.getInt('recencyWindow')    ?? 10;
-    autoFail     = prefs.getBool('autoFail')      ?? false;
-    notifyListeners();
+  static Future<GameSettings> load() async {
+    final p = await SharedPreferences.getInstance();
+    return GameSettings._(
+      p,
+      soundEnabled   : p.getBool ('sound')         ?? true,
+      defaultLives   : p.getInt  ('defaultLives')  ?? 3,
+      useTimer       : p.getBool ('useTimer')      ?? true,
+      timeSeconds    : p.getInt  ('timeSeconds')   ?? 15,
+      recencyWindow  : p.getInt  ('recencyWindow') ?? 10,
+      autoFail       : p.getBool ('autoFail')      ?? false,
+    );
   }
-
   Future<void> toggleSound() async {
     soundEnabled = !soundEnabled;
+    await _prefs.setBool('sound', soundEnabled);
     notifyListeners();
-    (await SharedPreferences.getInstance()).setBool('sound', soundEnabled);
   }
 
   Future<void> setDefaultLives(int v) async {
-    defaultLives = v;
+    defaultLives = v.clamp(1, 99);
+    await _prefs.setInt('defaultLives', defaultLives);
     notifyListeners();
-    (await SharedPreferences.getInstance()).setInt('defaultLives', v);
   }
 
   Future<void> toggleTimer() async {
     useTimer = !useTimer;
+    await _prefs.setBool('useTimer', useTimer);
     notifyListeners();
-    (await SharedPreferences.getInstance())
-        .setBool('useTimer', useTimer);
   }
 
   Future<void> setTimeSeconds(int v) async {
-    timeSeconds = v;
+    timeSeconds = v.clamp(5, 120);
+    await _prefs.setInt('timeSeconds', timeSeconds);
     notifyListeners();
-    (await SharedPreferences.getInstance())
-        .setInt('timeSeconds', v);
   }
+
   Future<void> setRecencyWindow(int v) async {
     recencyWindow = v.clamp(10, 1000);
+    await _prefs.setInt('recencyWindow', recencyWindow);
     notifyListeners();
-    (await SharedPreferences.getInstance())
-        .setInt('recencyWindow', recencyWindow);
   }
+
   Future<void> toggleAutoFail() async {
     autoFail = !autoFail;
+    await _prefs.setBool('autoFail', autoFail);
     notifyListeners();
-    (await SharedPreferences.getInstance()).setBool('autoFail', autoFail);
   }
+
 }

@@ -19,6 +19,10 @@ import '../services/audio_service.dart';
 /// phase. Mutate through [GameController.setPhase].
 enum GamePhase { setupLives, setupPlayers, playing, finished }
 
+/// Active sub-round of a tournament session. Only used when
+/// [tournament] is true.
+enum TourRound { none, round1, round2, finale }
+
 class GameController extends ChangeNotifier {
   // ────────────────────────────── core state ──────────────────────────────
   GamePhase _phase = GamePhase.setupLives;
@@ -30,11 +34,14 @@ class GameController extends ChangeNotifier {
   Question? currentQuestion;
   bool showAnswer = false;
   _LastAction? _lastAction;
+  bool tournament = false;
+  TourRound _tourRound = TourRound.none;
 
   // Services & helpers
   final GameSettings _settings;
   final QuestionRepository _questions;
   final AudioService _audio;
+  int _r1PlayerIdx = 0;
 
   // Timer
   Timer? _countdown;
@@ -45,6 +52,7 @@ class GameController extends ChangeNotifier {
   int  get availableCount   => _questions.availableCount;
   int  get recentCount      => _questions.recentCount;
   _LastAction? get LastAction => _lastAction;
+  TourRound get tourRound => _tourRound;
 
   GameController(this._settings, this._questions)
       : lives = _settings.defaultLives,
@@ -62,6 +70,22 @@ class GameController extends ChangeNotifier {
     if (v <= 0) return;
     lives = v;
     notifyListeners();
+  }
+
+  void setTournament(bool value) {
+    tournament = value;
+    if (tournament) {
+      setLives(3);                         // force 3 lives
+    }
+    notifyListeners();
+  }
+
+  // Removes the last player (if any) and notifies listeners.
+  void removeLastPlayer() {
+    if (players.isNotEmpty) {
+      players.removeLast();
+      notifyListeners();
+    }
   }
 
   // Skip the current question – go back to the player grid.
@@ -91,8 +115,13 @@ class GameController extends ChangeNotifier {
 
   void startGame() {
     if (!_allPlayersNamed) return;
-    _audio.playStart();
+    if(_settings.soundEnabled) _audio.playStart();
     setPhase(GamePhase.playing);
+    if (tournament) {
+            _tourRound     = TourRound.round1;
+            _r1PlayerIdx   = 0;
+            _autoAskNext();                       // 🚀 first automatic question
+        }
   }
 
   /// Bring the entire game back to the very first screen.
@@ -119,6 +148,55 @@ class GameController extends ChangeNotifier {
     // go back to the first phase
     setPhase(GamePhase.setupLives);
   }
+
+  // ────────────────── round-1 auto dispatcher ─────────────────────────
+  //   void nextAutoQuestion() {
+  //       if (!tournament || _tourRound != TourRound.round1) {
+  //         return;
+  //       }
+  //
+  //       final alive = players.where((p) => p.lives > 0).toList();
+  //       if (alive.isEmpty) return;        // should not happen
+  //
+  //       // round-robin index (skip eliminated players)
+  //       if (_r1PlayerIdx >= alive.length) _r1PlayerIdx = 0;
+  //       final player = alive[_r1PlayerIdx];
+  //
+  //       // second wrong in this round => eliminate (-2 lives)
+  //       if (player.lives == 1) {
+  //         player.lives = 0;
+  //         _r1PlayerIdx++;                 // move to next player
+  //         nextAutoQuestion();             // recurse – ask somebody else
+  //         return;
+  //       }
+  //
+  //       // Ask real question
+  //       ask(player);
+  //     }
+  void _autoAskNext() {
+    if (!tournament || _tourRound != TourRound.round1) return;
+
+    // nothing left?
+    if (players.where((p) => p.lives > 0).isEmpty) return;
+
+    // ------------------------------------------
+    // round-robin search for the NEXT alive guy
+    // ------------------------------------------
+    int cnt  = players.length;
+    int tries = 0;
+    while (tries < cnt) {
+      // start from current index and wrap around
+      _r1PlayerIdx = (_r1PlayerIdx + 1) % cnt;
+      final candidate = players[_r1PlayerIdx];
+      if (candidate.lives > 0) {
+        ask(candidate);
+        return;
+      }
+      tries++;
+    }
+  }
+
+  void nextAutoQuestion() => _autoAskNext();
 
   // ───────────────────────────── gameplay (step‑2) ────────────────────────
   Future<void> ask(Player player) async {
@@ -160,11 +238,20 @@ class GameController extends ChangeNotifier {
     _countdown?.cancel();
 
     if (correct) {
-      _audio.playCorrect();
+      if(_settings.soundEnabled) _audio.playCorrect();
       currentPlayer!.correctAnswers++;
+      if (_tourRound == TourRound.finale) {
+        currentPlayer!.points += 10;          // ← NEW
+      }
     } else {
-      _audio.playWrong();
+      if(_settings.soundEnabled) _audio.playWrong();
       currentPlayer!.lives--;
+      if (tournament && _tourRound == TourRound.round1) {
+        if (currentPlayer!.lives == 1) {
+          //maybe -1, but probably already done
+          currentPlayer!.lives--;
+        }
+      }
     }
     currentPlayer!.answeredCount++;
 
@@ -174,6 +261,18 @@ class GameController extends ChangeNotifier {
 
     _checkGameOver();
     notifyListeners();
+    _autoAskNext();
+  }
+
+  bool _allAskedTwoTimes() =>
+      players.every((p) => p.answeredCount >= 2);
+
+  void _convertLivesToPoints() {
+    for (final p in players.where((p)=>p.lives > 0)) {
+      p.points += p.lives;     // 1 life → 1 point
+      p.lives  = 3;            // reset lives for finale
+    }
+    players.removeWhere((p) => p.lives == 0);
   }
 
   void undoLast() {
@@ -194,11 +293,47 @@ class GameController extends ChangeNotifier {
 
   // ─────────────────────────────── finish ────────────────────────────────
   void _checkGameOver() {
-    if (players.every((p) => p.lives <= 0)) {
-      _audio.playEnd();
-      _saveHiScore();
-      setPhase(GamePhase.finished);
+    if(!tournament){
+      if (players.every((p) => p.lives <= 0)) {
+        if(_settings.soundEnabled) _audio.playEnd();
+        _saveHiScore();
+        setPhase(GamePhase.finished);
+      }
     }
+        // ─── TOURNAMENT FLOW ────────────────────────────────────────────
+        if (tournament) {
+          switch (_tourRound) {
+            case TourRound.none:
+              break;
+            case TourRound.round1:
+              final survivors = players.where((p) => p.lives > 0).length;
+              if (survivors <= 3) {
+                _tourRound = TourRound.finale;       // directly to finale
+                _convertLivesToPoints();
+                setPhase(GamePhase.playing);         // still playing
+              } else if (_allAskedTwoTimes()) {
+                _tourRound = TourRound.round2;
+                setPhase(GamePhase.playing);
+              }
+              break;
+
+            case TourRound.round2:
+              final alive = players.where((p) => p.lives > 0).length;
+              if (alive <= 3) {
+                _tourRound = TourRound.finale;
+                _convertLivesToPoints();
+              }
+              break;
+
+            case TourRound.finale:
+              if (players.where((p) => p.lives > 0).length == 0) {
+                _audio.playEnd();
+                _saveHiScore();
+                setPhase(GamePhase.finished);
+              }
+              break;
+          }
+        }
   }
 
   Future<void> _saveHiScore() async {

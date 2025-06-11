@@ -15,9 +15,45 @@ class GameplayView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final repo = context.watch<QuestionRepository>();
     final gs   = context.watch<GameSettings>();
     final ctrl  = context.watch<GameController>();
+
+    String tourRoundLabel(TourRound r) {
+      switch (r) {
+        case TourRound.finale: return 'Finał';
+        case TourRound.round1: return 'Runda 1';
+        case TourRound.round2: return 'Runda 2';
+        default:               return '';
+      }
+    }
+
+    // ── AUTO-ASK for tournament round-1 ────────────────────────────────
+    if (ctrl.tournament &&
+        ctrl.tourRound == TourRound.round1 &&
+        ctrl.currentQuestion == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // use read() so we don’t trigger another rebuild
+        ctrl.nextAutoQuestion();
+      });
+    }
+
+    final alive            = ctrl.players.where((p) => p.lives > 0).toList();
+    final distinctCounts   = alive.map((p) => p.answeredCount).toSet().toList()
+      ..sort();                                   // ascending
+
+    const Color startClr   = Colors.blue;         //  lowest answeredCount
+    const Color endClr     = Color(0xFF32CD32);   //  highest answeredCount
+    const int   steps      = 5;                   //  palette granularity
+
+    final palette = List<Color>.generate(
+      steps,
+          (i) => Color.lerp(startClr, endClr, i / (steps - 1))!,
+    );
+
+    final Map<int, Color> countColor = {};
+    for (var i = 0; i < distinctCounts.length; i++) {
+      countColor[distinctCounts[i]] = palette[i % palette.length];
+    }
     if (ctrl.currentQuestion == null) {
       return Column(
         children: [
@@ -28,12 +64,15 @@ class GameplayView extends StatelessWidget {
                 child: const Text("Nowa gra"),
               ),
                 const SizedBox(width: 12),
-                if (ctrl.LastAction != null)                     // pokaż tylko gdy jest co cofnąć
+                if (ctrl.LastAction != null && !ctrl.tournament)                     // pokaż tylko gdy jest co cofnąć
                   ElevatedButton.icon(
                     onPressed: ctrl.undoLast,
                     icon: const Icon(Icons.undo),
                     label: const Text("Zmień ost. Odp"),
-                  )]
+                  ),
+                const SizedBox(width: 12),
+                if(ctrl.tournament) Text(tourRoundLabel(ctrl.tourRound))
+              ]
           ),
           Expanded(
             child: GridView.count(
@@ -47,7 +86,9 @@ class GameplayView extends StatelessWidget {
                   onTap: () {
                     if (p.lives > 0) ctrl.ask(p);
                   },
-                  bgColor: p.lives == 0 ? Colors.grey : Colors.blue,
+                  bgColor: p.lives == 0
+                      ? Colors.grey.shade700                         // dead → grey
+                      : countColor[p.answeredCount] ?? Colors.blue,  // alive → gradient
                 );
               }).toList(),
             )
@@ -63,8 +104,11 @@ class GameplayView extends StatelessWidget {
           Row(children: [
             CircleAvatar(backgroundImage: ctrl.currentPlayer!.icon),
             const SizedBox(width: 8),
-            Text('Pytanie dla: ${ctrl.currentPlayer!.name}')
-          ]),
+            Text('Pytanie dla: ${ctrl.currentPlayer!.name}'),
+            const SizedBox(width: 20),
+            if(ctrl.tournament) Text(tourRoundLabel(ctrl.tourRound))
+          ],
+          ),
           const SizedBox(height: 12),
           Text(q.category.isEmpty ? '' : 'Kategoria: ${q.category}',
               style: const TextStyle(fontStyle: FontStyle.italic)),

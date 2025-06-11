@@ -12,14 +12,31 @@ import 'screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final settings = GameSettings();
-  await settings.load();
+  final settings = await GameSettings.load();
+  // await settings.load();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(
-    ChangeNotifierProvider<GameSettings>.value(
-      value: settings,
+    MultiProvider(
+      providers: [
+        // 0️⃣  the single, already-loaded instance
+        ChangeNotifierProvider.value(value: settings),
+
+        // 1️⃣  repository that depends on GameSettings
+        ChangeNotifierProvider(
+          create: (_) => QuestionRepository(settings)..load(),
+        ),
+
+        // 2️⃣  controller that needs BOTH settings & repo
+        ChangeNotifierProxyProvider<QuestionRepository, GameController>(
+          create: (ctx) => GameController(
+            ctx.read<GameSettings>(),
+            ctx.read<QuestionRepository>(),
+          ),
+          update: (_, __, ctrl) => ctrl!,
+        ),
+      ],
       child: const MyApp(),
     ),
   );
@@ -30,26 +47,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(providers: [
-      ChangeNotifierProvider(create: (_) => GameSettings()),
-
-      // ONE shared QuestionRepository:
-      ChangeNotifierProxyProvider<GameSettings, QuestionRepository>(
-        create: (ctx) => QuestionRepository(ctx.read<GameSettings>()),
-        update: (ctx, settings, repo) => repo!..load(),      // make sure it is loaded
-      ),
-
-      // GameController now needs the shared repo
-      ChangeNotifierProxyProvider2<GameSettings, QuestionRepository,
-          GameController>(
-        create: (ctx) => GameController(
-          ctx.read<GameSettings>(),
-          ctx.read<QuestionRepository>(),
-        ),
-        update: (__, ___, ____, ctrl) => ctrl!              // optional
-      ),
-    ],
-    child: MaterialApp(
+    return MaterialApp(
       title: 'Jeden z Dziesięciu V3',
       debugShowCheckedModeBanner: false,
       routes: {
@@ -57,7 +55,7 @@ class MyApp extends StatelessWidget {
         '/settings':(_) => const SettingsScreen(),
         '/hiscore': (_) => const HighscoreScreen(),
       },
-    )
     );
+
   }
 }

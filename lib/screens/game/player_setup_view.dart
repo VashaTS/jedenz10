@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../controllers/game_contoller.dart';
+import '../../widgets/nameFIeld.dart';
 
 class PlayerSetupView extends StatefulWidget {
   final GameController ctrl;
@@ -34,10 +35,14 @@ class _PlayerSetupViewState extends State<PlayerSetupView> {
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (_, i) {
               final p = widget.ctrl.players[i];
-              return Row(children: [
+              return Row(
+                  key: ValueKey('player_$i'),
+                  children: [
                 Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(labelText: 'Imię gracza'),
+                  child: NameField(
+                    key: ValueKey('name_$i'),        // keep state when list rebuilds
+                    initial: p.name,
+                    label: 'Gracz ${i + 1}',
                     onChanged: (v) => widget.ctrl.updatePlayer(i, name: v),
                   ),
                 ),
@@ -58,11 +63,17 @@ class _PlayerSetupViewState extends State<PlayerSetupView> {
               ElevatedButton.styleFrom(backgroundColor: Colors.grey[600]),
               child: const Text('Wróć'),
             ),
+            const SizedBox(width: 8),
             ElevatedButton(
               onPressed: widget.ctrl.addEmptyPlayer,
               child: const Text('Dodaj gracza'),
             ),
-            const SizedBox(width: 12),
+            if(widget.ctrl.players.length>1) const SizedBox(width: 8),
+            if(widget.ctrl.players.length>1) ElevatedButton(
+              onPressed: widget.ctrl.removeLastPlayer,          // ← NEW
+              child: const Text('Usuń gracza'),
+            ),
+            const SizedBox(width: 8),
             ElevatedButton(
               onPressed: widget.ctrl.startGame,
               child: const Text('Start gry'),
