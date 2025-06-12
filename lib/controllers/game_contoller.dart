@@ -120,7 +120,7 @@ class GameController extends ChangeNotifier {
     if (tournament) {
             _tourRound     = TourRound.round1;
             _r1PlayerIdx   = 0;
-            _autoAskNext();                       // 🚀 first automatic question
+            _autoAskNext();
         }
   }
 
@@ -149,30 +149,6 @@ class GameController extends ChangeNotifier {
     setPhase(GamePhase.setupLives);
   }
 
-  // ────────────────── round-1 auto dispatcher ─────────────────────────
-  //   void nextAutoQuestion() {
-  //       if (!tournament || _tourRound != TourRound.round1) {
-  //         return;
-  //       }
-  //
-  //       final alive = players.where((p) => p.lives > 0).toList();
-  //       if (alive.isEmpty) return;        // should not happen
-  //
-  //       // round-robin index (skip eliminated players)
-  //       if (_r1PlayerIdx >= alive.length) _r1PlayerIdx = 0;
-  //       final player = alive[_r1PlayerIdx];
-  //
-  //       // second wrong in this round => eliminate (-2 lives)
-  //       if (player.lives == 1) {
-  //         player.lives = 0;
-  //         _r1PlayerIdx++;                 // move to next player
-  //         nextAutoQuestion();             // recurse – ask somebody else
-  //         return;
-  //       }
-  //
-  //       // Ask real question
-  //       ask(player);
-  //     }
   void _autoAskNext() {
     if (!tournament || _tourRound != TourRound.round1) return;
 
@@ -186,8 +162,8 @@ class GameController extends ChangeNotifier {
     int tries = 0;
     while (tries < cnt) {
       // start from current index and wrap around
-      _r1PlayerIdx = (_r1PlayerIdx + 1) % cnt;
       final candidate = players[_r1PlayerIdx];
+      _r1PlayerIdx = (_r1PlayerIdx + 1) % cnt;
       if (candidate.lives > 0) {
         ask(candidate);
         return;

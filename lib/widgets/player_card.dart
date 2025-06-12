@@ -42,6 +42,8 @@ class PlayerCard extends StatelessWidget {
                     (_) => Container(width: 15, height: 15, color: Colors.yellow),
               ),
             ),
+            const SizedBox(height: 10),
+            Text("Odp ${player.correctAnswers} / ${player.answeredCount}")
           ],
         ),
       ),

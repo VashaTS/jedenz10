@@ -52,7 +52,6 @@ class QuestionRepository extends ChangeNotifier {
     for (final l in lines) {
       final m = lineRe.firstMatch(l);
       if (m == null) continue;                // pomiń wadliwy wiersz
-
       final q = m.group(1)!;                  // pytanie   (zawsze)
       final a = m.group(2)!;                  // odpowiedź (zawsze)
       final c = m.group(4);                   // kategoria (może być null)
@@ -64,29 +63,19 @@ class QuestionRepository extends ChangeNotifier {
     final counts = <String, int>{};
     for (final q in _all) {
       if (q.category.trim().isEmpty) continue;
-
       cats.add(q.category);
       counts[q.category] = (counts[q.category] ?? 0) + 1;
     }
-
-    // for (final q in _all) {
-    //   final c = q[2];
-    //   if (c.trim().isNotEmpty) {
-    //     counts[c] = (counts[c] ?? 0) + 1;
-    //   }
-    // }
     allCategories      = cats.toList()..sort();
     selectedCategories = {...allCategories};
     categoryCounts     = counts;
-    // _pool= all; // working pool
-
     _rebuildPool();
     _ready = true;
     notifyListeners();
 
     // just for sanity-check while debugging
-    debugPrint('Loaded ${_all.length} questions, '
-        'pool size: ${_pool.length}, cats: ${allCategories.length}');
+    // debugPrint('Loaded ${_all.length} questions, '
+    //     'pool size: ${_pool.length}, cats: ${allCategories.length}');
   }
 
   Question next() {
