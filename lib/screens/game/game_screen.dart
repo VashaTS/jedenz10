@@ -25,6 +25,12 @@ class GameScreen extends StatelessWidget {
           appBar: AppBar(
             title: const Text('Jeden z dziesięciu V3'),
             backgroundColor: Colors.blue,
+              leading: ctrl.phase == GamePhase.setupPlayers
+                  ? IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => ctrl.setPhase(GamePhase.setupLives),
+                  )
+                   : null,
             actions: [
               IconButton(
                 icon: const Icon(Icons.settings),

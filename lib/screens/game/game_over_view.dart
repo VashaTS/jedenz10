@@ -2,7 +2,6 @@
 //  file: lib/screens/game/game_over_view.dart
 // ===============================
 import 'package:flutter/material.dart';
-// import 'package:jeden_z_dziesieciu/controllers/game_controller.dart';
 
 import '../../controllers/game_contoller.dart';
 
@@ -24,7 +23,10 @@ class GameOverView extends StatelessWidget {
         ...ctrl.players.map((p) => Row(children: [
           if (winners.contains(p)) const Icon(Icons.emoji_events, color: Colors.amber),
           const SizedBox(width: 6),
-          Text('${p.name}: ${p.correctAnswers}   /   ${p.answeredCount}')
+          Text(
+            '${p.name}: ${p.correctAnswers}/${p.answeredCount}'
+                '${ctrl.tournament ? '. Punktów: ${p.points}' : ''}',
+          ),
         ])),
         const SizedBox(height: 20),
         ElevatedButton(

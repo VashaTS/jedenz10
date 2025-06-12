@@ -8,10 +8,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -19,10 +16,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         return windows;
       case TargetPlatform.linux:
@@ -39,7 +33,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAtFADSRD0FBjygYOgltD1pUYGR_g2o-JE',
-    appId: '1:243060172867:android:3510e9418595c2dea48cf6',
+    appId: '1:243060172867:android:d683ebe6a6cc4faea48cf6',
     messagingSenderId: '243060172867',
     projectId: 'jedenz10-566b9',
     storageBucket: 'jedenz10-566b9.firebasestorage.app',
@@ -62,4 +56,23 @@ class DefaultFirebaseOptions {
     authDomain: 'jedenz10-566b9.firebaseapp.com',
     storageBucket: 'jedenz10-566b9.firebasestorage.app',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDsXptSKS2mI_HUeJhBSByogFgfQcBtJH4',
+    appId: '1:243060172867:web:90d6a79feda04922a48cf6',
+    messagingSenderId: '243060172867',
+    projectId: 'jedenz10-566b9',
+    authDomain: 'jedenz10-566b9.firebaseapp.com',
+    storageBucket: 'jedenz10-566b9.firebasestorage.app',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyAZOK6VuwNjAYdq2H9jVNKITnstw8katiY',
+    appId: '1:243060172867:ios:2ca4298a55a8562fa48cf6',
+    messagingSenderId: '243060172867',
+    projectId: 'jedenz10-566b9',
+    storageBucket: 'jedenz10-566b9.firebasestorage.app',
+    iosBundleId: 'com.example.jedenZDziesieciu',
+  );
+
 }

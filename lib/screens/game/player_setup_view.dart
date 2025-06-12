@@ -57,23 +57,15 @@ class _PlayerSetupViewState extends State<PlayerSetupView> {
         Row(
           children: [
             ElevatedButton(
-              onPressed: () =>
-                  widget.ctrl.setPhase(GamePhase.setupLives), // back to step 0
-              style:
-              ElevatedButton.styleFrom(backgroundColor: Colors.grey[600]),
-              child: const Text('Wróć'),
-            ),
-            const SizedBox(width: 8),
-            ElevatedButton(
               onPressed: widget.ctrl.addEmptyPlayer,
               child: const Text('Dodaj gracza'),
             ),
-            if(widget.ctrl.players.length>1) const SizedBox(width: 8),
+            if(widget.ctrl.players.length>1) const SizedBox(width: 5),
             if(widget.ctrl.players.length>1) ElevatedButton(
               onPressed: widget.ctrl.removeLastPlayer,          // ← NEW
               child: const Text('Usuń gracza'),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 5),
             ElevatedButton(
               onPressed: widget.ctrl.startGame,
               child: const Text('Start gry'),

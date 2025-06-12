@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../controllers/game_contoller.dart';
 import '../models/player.dart';
 
 class PlayerCard extends StatelessWidget {
@@ -10,6 +12,7 @@ class PlayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isTournament = context.select<GameController, bool>((c) => c.tournament);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -43,7 +46,9 @@ class PlayerCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text("Odp ${player.correctAnswers} / ${player.answeredCount}")
+            Text("Odp ${player.correctAnswers} / ${player.answeredCount}"),
+            if(isTournament) const SizedBox(height: 8),
+            if(isTournament) Text("Pkt: ${player.points}")
           ],
         ),
       ),

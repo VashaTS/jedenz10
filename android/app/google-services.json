@@ -9,6 +9,25 @@
       "client_info": {
         "mobilesdk_app_id": "1:243060172867:android:3510e9418595c2dea48cf6",
         "android_client_info": {
+          "package_name": "com.example.jeden_z_dziesieciu_v2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtFADSRD0FBjygYOgltD1pUYGR_g2o-JE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:243060172867:android:d683ebe6a6cc4faea48cf6",
+        "android_client_info": {
           "package_name": "net.szymonmarciniak.jeden_z_dziesieciu_v2"
         }
       },
