@@ -36,6 +36,7 @@ class GameController extends ChangeNotifier {
   _LastAction? _lastAction;
   bool tournament = false;
   TourRound _tourRound = TourRound.none;
+  Player? _lastFinaleWinner;   // who answered last, only in finale
 
   // Services & helpers
   final GameSettings _settings;
@@ -46,6 +47,9 @@ class GameController extends ChangeNotifier {
   // Timer
   Timer? _countdown;
   int remainingSeconds = 0;
+
+  int _finaleLeft = 40;
+  int get finaleLeft => _finaleLeft;
 
   // public accessors for UI (loading info, counts)
   bool get questionsLoaded => _questions.isReady;
@@ -138,6 +142,10 @@ class GameController extends ChangeNotifier {
     showAnswer      = false;
     _lastAction     = null;
     remainingSeconds = 0;
+    _finaleLeft = 40;
+
+
+    _tourRound = TourRound.none;
 
     // (optional) rebuild question pool in case the user changed filters
     _questions.applyCategorySelection(
@@ -201,6 +209,14 @@ class GameController extends ChangeNotifier {
         }
       });
     }
+    if (tournament && _tourRound == TourRound.finale) {
+      _finaleLeft--;
+      if (_finaleLeft == 0) {
+        // no questions left → everyone eliminated, trigger game-over
+        for (final p in players) p.lives = 0;
+        _checkGameOver();           // will call playEnd(), save score, etc.
+      }
+    }
     notifyListeners();
   }
 
@@ -216,10 +232,16 @@ class GameController extends ChangeNotifier {
     if (correct) {
       if(_settings.soundEnabled) _audio.playCorrect();
       currentPlayer!.correctAnswers++;
-      if (_tourRound == TourRound.finale) {
-        currentPlayer!.points += 10;          // ← NEW
-      }
+      if (tournament && _tourRound == TourRound.finale) {
+         final bonus =
+             (currentPlayer == _lastFinaleWinner) ? 20 : 10; // self-select bonus
+         currentPlayer!.points += bonus;
+         _lastFinaleWinner = currentPlayer;                  // remember winner
+       } else {
+         _lastFinaleWinner = null;   // reset streak outside the finale
+       }
     } else {
+      _lastFinaleWinner = null;
       if(_settings.soundEnabled) _audio.playWrong();
       currentPlayer!.lives--;
       if (tournament && _tourRound == TourRound.round1) {

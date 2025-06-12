@@ -71,7 +71,9 @@ class GameplayView extends StatelessWidget {
                     label: const Text("Zmień ost. Odp"),
                   ),
                 const SizedBox(width: 12),
-                if(ctrl.tournament) Text(tourRoundLabel(ctrl.tourRound))
+                if(ctrl.tournament) Text(tourRoundLabel(ctrl.tourRound)),
+                const SizedBox(width: 12),
+                if(ctrl.tourRound==TourRound.finale) Text('${ctrl.finaleLeft}', style: TextStyle(fontWeight: FontWeight.bold),)
               ]
           ),
           Expanded(
