@@ -1,28 +1,62 @@
-<!DOCTYPE html><html lang="en">
-<meta charset="utf-8">
-<title>Privacy Policy – Jeden z Dziesięciu</title>
-<h1>Privacy Policy</h1>
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Polityka prywatności – Jeden z Dziesięciu V3</title>
+    <style>
+        body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;margin:0;padding:2rem;background:#fafafa;color:#111}
+        h1,h2{color:#0366d6;margin-top:1.5rem}
+        h1{font-size:1.8rem}
+        h2{font-size:1.25rem}
+        a{color:#0366d6;text-decoration:none}
+        a:hover{text-decoration:underline}
+        section{max-width:800px;margin:auto}
+        footer{margin-top:3rem;font-size:0.875rem;color:#555;text-align:center}
+    </style>
+</head>
+<body>
+<section>
+    <h1>Polityka prywatności<br><small>Jeden z Dziesięciu V3</small></h1>
 
-<p><strong>Last updated: 16 June 2025</strong></p>
+    <p>Aplikacja <strong>Jeden z Dziesięciu V3</strong> szanuje prywatność użytkowników i zbiera wyłącznie minimalne
+        dane niezbędne do prawidłowego działania gry.</p>
 
-<p>
-    The “Jeden z Dziesięciu” mobile app (the “App”) does <em>not</em> collect, store
-    or share any personal or sensitive user data.
-</p>
+    <h2>Jakie dane zbieramy?</h2>
+    <ul>
+        <li><strong>Nazwa gracza</strong> – wprowadzona dobrowolnie przez użytkownika przed rozpoczęciem gry.</li>
+        <li><strong>Wynik (liczba punktów)</strong> – zapisywany po zakończeniu rozgrywki, jeśli użytkownik osiągnie wynik w TOP 10 dla danej liczby żyć.</li>
+    </ul>
 
-<ul>
-    <li>No account is required.</li>
-    <li>No analytics, advertising or tracking SDKs are integrated.</li>
-    <li>No information is sent to our servers.</li>
-</ul>
+    <h2>W jaki sposób dane są przetwarzane?</h2>
+    <p>
+        • Podczas uruchomienia ekranu „Hiscore” aplikacja <strong>pobiera</strong> listę 10 najlepszych wyników
+        (dowolnych graczy) z bazy Firebase Firestore.<br>
+        • Po zakończeniu gry (ekran „Gra zakończona”) aplikacja <strong>wysyła</strong> Twój wynik i nazwę
+        gracza do Firestore &ndash; <em>tylko</em> jeżeli mieścisz się w TOP 10.<br>
+        • Nie są wysyłane żadne inne informacje (np. adres IP, ID urządzenia, adres e-mail itp.).
+    </p>
 
-<p>
-    The App requests the <code>INTERNET</code> permission solely to download
-    Open-source question data at first launch; the data is retrieved anonymously.
-</p>
+    <h2>Pytania i odpowiedzi</h2>
+    <p>
+        Pełna baza ponad 5 000 pytań jest dołączona do aplikacji (<code>assets/pytania_clean.csv</code>).
+        Aplikacja <strong>nie pobiera</strong> żadnych treści z Internetu podczas rozgrywki.
+    </p>
 
-<h2>Contact</h2>
-<p>
-    If you have any questions, please contact <a href="mailto:sajmon313@gmail.com">sajmon313@gmail.com</a>.
-</p>
+    <h2>Udostępnianie danych</h2>
+    <p>Dane przechowywane w Firestore są widoczne publicznie w tabeli wyników.
+        Nie są przekazywane podmiotom zewnętrznym ani wykorzystywane do celów marketingowych.</p>
+
+    <h2>Twoje prawa</h2>
+    <p>Możesz w każdej chwili zażądać usunięcia wpisu z tabeli wyników. Skontaktuj się ze mną, podając nazwę
+        gracza i datę wyniku.</p>
+
+    <h2>Kontakt</h2>
+    <p>Autor: Szymon Marciniak &bull; e-mail: <a href="mailto:sajmon313@gmail.com">sajmon313@gmail.com</a></p>
+
+    <footer>
+        Ostatnia aktualizacja: 12&nbsp;czerwca&nbsp;2025&nbsp;r.
+    </footer>
+</section>
+</body>
 </html>
