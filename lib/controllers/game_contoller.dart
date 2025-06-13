@@ -202,7 +202,7 @@ class GameController extends ChangeNotifier {
       _countdown = Timer.periodic(const Duration(seconds: 1), (t) {
         if (remainingSeconds == 0) {
           t.cancel();
-          _autoFail();
+          if(_settings.autoFail) _autoFail();
         } else {
           remainingSeconds--;
           notifyListeners();
@@ -335,18 +335,45 @@ class GameController extends ChangeNotifier {
   }
 
   Future<void> _saveHiScore() async {
-    final best = players.map((p) => p.correctAnswers).reduce(max);
     final now = DateTime.now();
-    for (final p in players.where((p) => p.correctAnswers == best)) {
+    /* ------------ decide winners according to current mode ------------ */
+    Iterable<Player> winners;
+
+    if (!tournament) {
+      // ── Normal mode: highest correct answers wins ────────────────────
+      final best = players.map((p) => p.correctAnswers).reduce(max);
+      winners     = players.where((p) => p.correctAnswers == best);
+
+    } else {
+      // ── Tournament mode ──────────────────────────────────────────────
+      if (_tourRound == TourRound.finale && _finaleLeft <= 0) {
+        // 40-question quota exhausted → choose by POINTS
+        final topPts = players.map((p) => p.points).reduce(max);
+        winners      = players.where((p) => p.points == topPts);
+      } else {
+        // Otherwise the finale ended because one player survived.
+        // That survivor is simply the player who just answered last.
+        winners = [currentPlayer!];
+      }
+    }
+
+    /* ---------------- persist each winner (same as earlier) ----------- */
+    for (final p in winners) {
+      final int score    = tournament ? p.points : p.correctAnswers;
+      final String bucket = tournament ? 'T' : lives.toString();
+
       await HighscoreService.add(
-          lives, HighscoreEntry(p.name, p.correctAnswers, now));
+        tournament ? -1 : lives,
+        HighscoreEntry(p.name, score, now),
+      );
+
       await FirebaseFirestore.instance
           .collection('highscore')
-          .doc(lives.toString())
+          .doc(bucket)
           .collection('scores')
           .add({
         'name': p.name,
-        'score': p.correctAnswers,
+        'score': score,
         'date': FieldValue.serverTimestamp(),
       });
     }

@@ -63,7 +63,7 @@ class _PlayerSetupViewState extends State<PlayerSetupView> {
             if(widget.ctrl.players.length>1) const SizedBox(width: 5),
             if(widget.ctrl.players.length>1) ElevatedButton(
               onPressed: widget.ctrl.removeLastPlayer,          // ← NEW
-              child: const Text('Usuń gracza'),
+              child: const Text('Usuń'),
             ),
             const SizedBox(width: 5),
             ElevatedButton(

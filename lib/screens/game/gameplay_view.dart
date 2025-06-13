@@ -27,6 +27,10 @@ class GameplayView extends StatelessWidget {
       }
     }
 
+    String capitalize(String s) =>
+        s.isNotEmpty ? s[0].toUpperCase() + s.substring(1) : s;
+
+
     // ── AUTO-ASK for tournament round-1 ────────────────────────────────
     if (ctrl.tournament &&
         ctrl.tourRound == TourRound.round1 &&
@@ -115,7 +119,7 @@ class GameplayView extends StatelessWidget {
           Text(q.category.isEmpty ? '' : 'Kategoria: ${q.category}',
               style: const TextStyle(fontStyle: FontStyle.italic)),
           const SizedBox(height: 6),
-          Text(q.text, style: const TextStyle(fontSize: 20)),
+          Text(capitalize(q.text), style: const TextStyle(fontSize: 20)),
           const SizedBox(height: 12),
           if (gs.useTimer)
             Text('Czas: ${ctrl.remainingSeconds}s',

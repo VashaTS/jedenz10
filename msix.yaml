@@ -1,0 +1,25 @@
+display_name: Jeden z Dziesięciu
+publisher_display_name: "Szymon Marciniak"
+identity_name: SzymonMarciniak.Jedenz10   # must match Partner Center ID
+msix_version: 1.3.4.5                        # <major>.<minor>.<build>.<revision>
+publisher: CN=2B5101A8-1EBF-4B6B-975B-D11F77F68088
+
+replace_icons: true
+
+logo_path: assets/msix/logo.png               # 256×256 (used for Start menu)
+store_logo_path: assets/msix/store_logo.png   # 50×50
+#tile_icons_path: assets/msix/tiles            # optional 44/150/310 px tiles
+high_resolution_icon_path: assets/msix/scale400.png  # 1024×1024
+splash_screen_image_path:  assets/msix/splash.png    # 620×300 (rectangle)
+
+capabilities:
+  - runFullTrust
+  - internetClient
+  - picturesLibrary         # add only what you need
+
+# (Optional) which files to include in addition to the compiled exe:
+#assets:
+#  - assets/pytania_clean.csv
+
+# If you need command-line args, env vars, etc.
+# launch_arguments: --some-flag
