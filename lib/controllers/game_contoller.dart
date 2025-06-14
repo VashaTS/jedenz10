@@ -12,6 +12,7 @@ import 'package:jeden_z_dziesieciu/models/player.dart';
 import 'package:jeden_z_dziesieciu/repositories/question_repository.dart';
 import 'package:jeden_z_dziesieciu/services/highscore_service.dart';
 
+import '../models/question.dart';
 import '../services/audio_service.dart';
 
 

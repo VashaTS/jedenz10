@@ -122,7 +122,7 @@ class _HighscoreScreenState extends State<HighscoreScreen>
               10,
                   (i) => DropdownMenuItem(
                 value: i + 1,
-                child: Text('${i + 1} żyć'),
+                child: Text('${i + 1} szans'),
               ),
             ),
           ],
