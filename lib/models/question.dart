@@ -4,9 +4,9 @@ class Question {
   final String answer;
   final String category;
   final bool isAI;
-  int points = 0;                 // nothing changes here
+  final String? musicAsset;
 
-  Question(this.text, this.answer, this.category)
+  Question(this.text, this.answer, this.category, {this.musicAsset})
       : isAI = text.contains('🤖');
 }
 

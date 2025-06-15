@@ -13,6 +13,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/question.dart';
 
+class _GeneratedQ {
+  final String category;
+  final Question Function() build;
+
+  _GeneratedQ(this.category, this.build);
+}
+
 /// Holds the entire question bank, provides random non‑repeating questions
 /// respecting category filters and a recency window.
 
@@ -46,6 +53,7 @@ class QuestionRepository extends ChangeNotifier {
   //   // add more tokens → generator here
   // };
   static int _gcd(int a, int b) => b == 0 ? a : _gcd(b, a % b);
+  // final _musicToken = RegExp(r'^\{music:([^}]+)\}\s*', caseSensitive: false);
   // Public API ------------------------------------------------------------
   Future<void> _tryRestoreSelection() async {
     final prefs   = await SharedPreferences.getInstance();
@@ -74,143 +82,203 @@ class QuestionRepository extends ChangeNotifier {
     _all.clear();
     final cats = <String>{};
     final counts = <String, int>{};
-    for (final l in lines) {
-      final m = lineRe.firstMatch(l);
-      if (m == null) continue;                // pomiń wadliwy wiersz
-      final q = m.group(1)!;                  // pytanie   (zawsze)
-      final a = m.group(2)!;                  // odpowiedź (zawsze)
-      final c = m.group(4);                   // kategoria (może być null)
+    try {
+      for (final l in lines) {
+        final m = lineRe.firstMatch(l);
+        if (m == null) continue; // pomiń wadliwy wiersz
+        final q = m.group(1)!; // pytanie   (zawsze)
+        final a = m.group(2)!; // odpowiedź (zawsze)
+        final c = m.group(4); // kategoria (może być null)
 
-      /// Parses "{token(x-y)}" pattern and returns (token, x, y) or null.
-      ({String token, int Function() rand})? parseRangeToken(String s) {
-        final pattern = RegExp(r'^\{([a-zA-Z_]+)\((\d+)-(\d+)\)\}$');
-        final match = pattern.firstMatch(s);
-        if (match == null) return null;
-        final from = int.parse(match.group(2)!);
-        final to   = int.parse(match.group(3)!);
-        return (
-        token: match.group(1)!,
-        rand: () => Random().nextInt(to - from + 1) + from,
-        );
-      }
-      final questionArrayPattern = RegExp(r"^\{questionArray\('(.*?)',\[(.*?)\],'(.*?)',\[(.*?)\]\)\}$");
-      final match = questionArrayPattern.firstMatch(q);
-      if (match != null) {
-        final prefix = match.group(1)!; // 'Jak nazywa się dźwięk '
-        final questionsRaw = match.group(2)!; // 'C','D','E'
-        final suffix = match.group(3)!; // ' obniżony o pół tonu'
-        final answersRaw = match.group(4)!; // 'ces','des','es'
-
-        final questions = questionsRaw.split(',').map((s) => s.trim().replaceAll("'", '')).toList();
-        final answers   = answersRaw.split(',').map((s) => s.trim().replaceAll("'", '')).toList();
-
-        if (questions.length != answers.length) throw FormatException('questionArray: mismatched lengths');
-
-        _all.add(() {
-          final i = Random().nextInt(questions.length);
-          final qPart = questions[i];
-          final aPart = answers[i];
-          return Question(
-            '$prefix$qPart$suffix',
-            aPart,
-            c!,
+        /// Parses "{token(x-y)}" pattern and returns (token, x, y) or null.
+        ({String token, int Function() rand})? parseRangeToken(String s) {
+          final pattern = RegExp(r'^\{([a-zA-Z_]+)\((\d+)-(\d+)\)\}$');
+          final match = pattern.firstMatch(s);
+          if (match == null) return null;
+          final from = int.parse(match.group(2)!);
+          final to = int.parse(match.group(3)!);
+          return (
+          token: match.group(1)!,
+          rand: () => Random().nextInt(to - from + 1) + from,
           );
-        });
-
-        if (c!.isNotEmpty) {
-          cats.add(c);
-          counts[c] = (counts[c] ?? 0) + 1;
+        }
+        final musicRe = RegExp(r'^\{music:([^\}]+)\}\s*(.*)$');
+        final qRaw = m.group(1)!;            // the whole 1st-column cell
+        String questionText = qRaw;
+        String? musicAsset;
+        final mm = musicRe.firstMatch(qRaw);
+        if (mm != null) {
+          musicAsset  = '${mm.group(1)}';   // e.g. assets/imagine.mp3
+          questionText = mm.group(2)!.trim();             // rest of the sentence
+        }
+        else{
+          questionText = q;
         }
 
-        continue;
-      }
+        final questionArrayPattern = RegExp(
+            r"^\{questionArray\('(.*?)',\[(.*?)\],'(.*?)',\[(.*?)\]\)\}$");
+        final match = questionArrayPattern.firstMatch(q);
+        if (match != null) {
+          final prefix = match.group(1)!; // 'Jak nazywa się dźwięk '
+          final questionsRaw = match.group(2)!; // 'C','D','E'
+          final suffix = match.group(3)!; // ' obniżony o pół tonu'
+          final answersRaw = match.group(4)!; // 'ces','des','es'
 
-      final parsed = parseRangeToken(q);
-      if (parsed != null) {
-        switch (parsed.token) {
-          case 'generateRoman_Amount':
-            _all.add(() {
-              final n = parsed.rand();
-              final roman = _toRoman(n);
+          final questions = questionsRaw.split(',').map((s) =>
+              s.trim().replaceAll("'", '')).toList();
+          final answers = answersRaw.split(',').map((s) =>
+              s.trim().replaceAll("'", '')).toList();
+
+          if (questions.length != answers.length) throw FormatException(
+              'questionArray: mismatched lengths');
+
+          _all.add(
+            _GeneratedQ(c!,() {
+              final i = Random().nextInt(questions.length);
+              final qPart = questions[i];
+              final aPart = answers[i];
               return Question(
-                'Ilu cyfr rzymskich użyjemy do zapisania liczby $n?',
-                '${roman.length} ($roman)',
+                '$prefix$qPart$suffix',
+                aPart,
                 c!,
+                musicAsset: musicAsset,
               );
-            });
-            break;
-          case 'generateYear_Century':
-            _all.add(() {
-              final year = parsed.rand();
-              final century = ((year - 1) ~/ 100) + 1;
-              return Question(
-                'Rok $year – który to wiek?',
-                '${_toRoman(century)} ($century)',
-                c!,
+            })
+          );
+
+          if (c!.isNotEmpty) {
+            cats.add(c);
+            counts[c] = (counts[c] ?? 0) + 1;
+          }
+
+          continue;
+        }
+
+        final parsed = parseRangeToken(q);
+        if (parsed != null) {
+          switch (parsed.token) {
+            case 'generateRoman_Amount':
+              _all.add(
+                _GeneratedQ(c!, (){
+                  final n = parsed.rand();
+                  final roman = _toRoman(n);
+                  return Question(
+                    'Ilu cyfr rzymskich użyjemy do zapisania liczby $n?',
+                    '${roman.length} ($roman)',
+                    c!,
+                    musicAsset: musicAsset,
+                  );
+                })
               );
-            });
-            break;
-          case 'generateFactorial':
-          _all.add(() {
-            final n = parsed.rand();
-            final f = List.generate(n, (i) => i + 1).fold(1, (a, b) => a * b);
-            return Question(
-              'Ile wynosi $n silnia?',
-              '$f',
-              c!,
-            );
-          });
-          break;
-          case 'biggestNatural':
-            _all.add(() {
-              final digitCount = parsed.rand();
-              final max = int.parse('9' * digitCount);
-              return Question(
+              break;
+            case 'generateYear_Century':
+              _all.add(
+                _GeneratedQ(c!, (){
+                  final year = parsed.rand();
+                  final century = ((year - 1) ~/ 100) + 1;
+                  return Question(
+                    'Rok $year – który to wiek?',
+                    '${_toRoman(century)} ($century)',
+                    c!,
+                  );
+                })
+              );
+              break;
+            case 'generateFactorial':
+              _all.add(
+                _GeneratedQ(c!,(){
+                  final n = parsed.rand();
+                  final f = List.generate(n, (i) => i + 1).fold(
+                      1, (a, b) => a * b);
+                  return Question(
+                    'Ile wynosi $n silnia?',
+                    '$f',
+                    c!,
+                    musicAsset: musicAsset,
+                  );
+                })
+              );
+              break;
+            case 'biggestNatural':
+              _all.add(
+                _GeneratedQ(c!,(){
+                final digitCount = parsed.rand();
+                final max = int.parse('9' * digitCount);
+                return Question(
                 'Największa naturalna liczba $digitCount-cyfrowa to…',
                 '$max',
                 c!,
+                );
+                })
               );
-            });
-            break;
-          case 'multiplyFractionsSame':
-            _all.add(() {
-              final d = parsed.rand();
-              final result = 1 ~/ _gcd(d * d, 1); // always 1 numerator
-              final simp = d * d;
-              return Question(
-                'Ile to jest 1/$d × 1/$d?',
-                '1/$simp',
-                c!,
+              break;
+            case 'multiplyFractionsSame':
+              _all.add(
+                _GeneratedQ(c!,(){
+                  final d = parsed.rand();
+                  // final result = 1 ~/ _gcd(d * d, 1); // always 1 numerator
+                  final simp = d * d;
+                  return Question(
+                    'Ile to jest 1/$d × 1/$d?',
+                    '1/$simp',
+                    c!,
+                    musicAsset: musicAsset,
+                  );
+                })
               );
-            });
-            break;
-          case 'power':
-            _all.add(() {
-              final a = parsed.rand(); // base
-              final b = parsed.rand(); // exponent
-              final result = pow(a, b)!.toInt();
+              break;
+            case 'power':
+              _all.add(
+                _GeneratedQ(c!,(){
+                  final a = parsed.rand(); // base
+                  final b = parsed.rand(); // exponent
+                  final result = pow(a, b)!.toInt();
 
-              return Question(
-                'Ile wynosi $a do potęgi $b?',
-                '$result',
-                c!,
+                  return Question(
+                    'Ile wynosi $a do potęgi $b?',
+                    '$result',
+                    c!,
+                    musicAsset: musicAsset,
+                  );
+                })
               );
-            });
-            break;
+              break;
+            case 'circleDiameter':
+              _all.add(
+                _GeneratedQ(c!,(){
+                  final r = parsed
+                      .rand(); // assuming parsed comes from {circleRadius(1-20)} or similar
+                  final d = r * 2;
+                  return Question(
+                    'Ile wynosi średnica okręgu o r=$r cm?',
+                    '$d',
+                    c!,
+                    musicAsset: musicAsset,
+                  );
+                })
+              );
+              break;
+          }
+
+          if (c!.isNotEmpty) {
+            cats.add(c);
+            counts[c] = (counts[c] ?? 0) + 1;
+          }
+
+          continue;
         }
-
-        if (c!.isNotEmpty) {
-          cats.add(c);
-          counts[c] = (counts[c] ?? 0) + 1;
-        }
-
-        continue;
+        _all.add(Question(questionText, a, c!, musicAsset: musicAsset));
       }
-      _all.add(Question(q, a, c ?? ''));
+
+      // init categories
+    } catch(e,st){
+      // ══ NEW  ➜  tell exactly which CSV line is bad
+      debugPrint(
+        '⚠️  Bad CSV entry  ${e} : ${st}',
+      );
+      // You can also `print(st)` if you need the stack-trace.
+                   // skip and keep loading
     }
-
-    // init categories
-
 
     for (final q in _all) {
       if (q is! Question) continue;
@@ -237,27 +305,28 @@ class QuestionRepository extends ChangeNotifier {
   Question next() {
     if (_pool.isEmpty) _recycle();
     _pool.shuffle();
+
     final item = _pool.removeLast();
     late Question q;
-    if (item is Question) {
-      // normal, pre-made question
+
+    if (item is _GeneratedQ) {
+      // on-the-fly question – build it now
+      q = item.build();
+    } else if (item is Question) {
+      // regular, pre-made question from CSV
       q = item;
-    } else if (item is QuestionGenerator) {
-      // generate on-the-fly (need the cast so we can call it)
-      q = (item as QuestionGenerator)();
-    } else if (item is Function) {
-      // in case the generator is a plain top-level/anon function
-      q = (item as Question Function())();
     } else {
       throw StateError('Unknown item type in pool: $item');
     }
 
+    // remember what we just used (keep the wrapper for generators!)
     _recent.addLast(item);
     if (_recent.length > _settings.recencyWindow) {
       _recent.removeFirst();
     }
     return q;
   }
+
 
   /// Quick converter good up to 3999
   static String _toRoman(int num) {
@@ -304,14 +373,17 @@ class QuestionRepository extends ChangeNotifier {
         _all.where((item) {
           // keep every generator; for real questions apply category filter
           if (item is Question) return _isAllowed(item);
-          return true;                     // generator closure → keep
+          if (item is _GeneratedQ) return selectedCategories.contains(item.category);
+          return false;                     // generator closure → keep
         }),
       );
 
     // drop only *real* questions from _recent that are no longer allowed
-    _recent.removeWhere(
-          (item) => item is Question && !_isAllowed(item),
-    );
+    _recent.removeWhere((item) {
+      if (item is Question)    return !_isAllowed(item);
+      if (item is _GeneratedQ) return !selectedCategories.contains(item.category);
+      return true;
+    });
   }
 
   bool _isAllowed(Object o) {

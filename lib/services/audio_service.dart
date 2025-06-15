@@ -10,11 +10,11 @@ class AudioService {
   final AudioPlayer _player = AudioPlayer();
   AudioService(this._settings);
 
-  // Future<void> _play(String asset) async {
-  //   if (!enabled) return;
-  //   await _player.stop();
-  //   await _player.play(AssetSource(asset));
-  // }
+  Future<void> playClip(String asset) async {
+    if (!_settings.soundEnabled) return;
+    await _player.stop();
+    await _player.play(AssetSource(asset));
+  }
 
   void playStart()   { if (!_settings.soundEnabled) return;
   _player.play(AssetSource('start.mp3')); }

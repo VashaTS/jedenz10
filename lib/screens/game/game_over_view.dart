@@ -67,9 +67,10 @@ class GameOverView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        ElevatedButton(
+        ElevatedButton.icon(
+          icon: const Icon(Icons.refresh),
+          label: const Text('Zagraj ponownie'),
           onPressed: ctrl.reset,
-          child: const Text('Zagraj ponownie'),
         ),
       ],
     );

@@ -23,7 +23,7 @@ class GameScreen extends StatelessWidget {
         final ctrl = context.watch<GameController>();
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Jeden z dziesięciu V3'),
+            title: const Text('Jeden z dziesięciu'),
             backgroundColor: Colors.blue,
               leading: ctrl.phase == GamePhase.setupPlayers
                   ? IconButton(

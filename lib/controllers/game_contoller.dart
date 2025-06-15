@@ -158,6 +158,15 @@ class GameController extends ChangeNotifier {
     setPhase(GamePhase.setupLives);
   }
 
+  void playClip(String asset) {
+    if (_settings.soundEnabled) {
+      _audio.playClip(asset);
+    } else {
+      // _toast = 'Dźwięk jest wyłączony w ustawieniach ⚙️';
+      // notifyListeners();
+    }
+  }
+
   void _autoAskNext() {
     if (!tournament || _tourRound != TourRound.round1) return;
 
@@ -195,6 +204,12 @@ class GameController extends ChangeNotifier {
     currentPlayer = player;
     currentQuestion = _questions.next();
     showAnswer = false;
+
+    if(currentQuestion!.musicAsset != null){
+      if(_settings.soundEnabled){
+        _audio.playClip(currentQuestion!.musicAsset!);
+      }
+    }
 
     if (_settings.useTimer) {
       _countdown?.cancel();

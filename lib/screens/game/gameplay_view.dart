@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../controllers/game_contoller.dart';
 import '../../models/game_settings.dart';
+import '../../services/audio_service.dart';
 
 class GameplayView extends StatelessWidget {
   // final GameController ctrl;
@@ -62,10 +63,11 @@ class GameplayView extends StatelessWidget {
       return Column(
         children: [
           Row(
-              children: [ElevatedButton(
+              children: [ElevatedButton.icon(
+                icon: const Icon(Icons.refresh),
+                label: const Text("Nowa gra"),
                 onPressed: ctrl.reset,
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                child: const Text("Nowa gra"),
               ),
                 const SizedBox(width: 12),
                 if (ctrl.LastAction != null && !ctrl.tournament)                     // pokaż tylko gdy jest co cofnąć
@@ -120,6 +122,15 @@ class GameplayView extends StatelessWidget {
               style: const TextStyle(fontStyle: FontStyle.italic)),
           const SizedBox(height: 6),
           Text(capitalize(q.text), style: const TextStyle(fontSize: 20)),
+          if (q.musicAsset != null)             // ④ replay button
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('Odtwórz ponownie'),
+                onPressed: () => ctrl.playClip(q.musicAsset!),
+              ),
+            ),
           const SizedBox(height: 12),
           if (gs.useTimer)
             Text('Czas: ${ctrl.remainingSeconds}s',
@@ -138,12 +149,13 @@ class GameplayView extends StatelessWidget {
                     '\nKategoria: ${q.category}';
 
                 final body = Uri.encodeComponent(
-                  'Pytanie: ${q.text}\nOdpowiedź: ${q.answer}\n\nTwoje uwagi:\n\n\n\n--\nWersja aplikacji: 1.3.0\n--',
+                  'Pytanie: ${q.text}\nOdpowiedź: ${q.answer}\n\nTwoje uwagi:\n\n\n\n--\nWersja aplikacji: 1.4.0\n--',
                 );
 
                 final uri = Uri.parse(
                   'mailto:sajmon313@gmail.com'
                       '?subject=Błąd w pytaniu'
+                      '&cc=kamil.wysocki101997@gmail.com'
                       '&body=$body',
                 );
 
@@ -161,16 +173,19 @@ class GameplayView extends StatelessWidget {
           ],
           const SizedBox(height: 12),
           Row(children: [
-            ElevatedButton(
+            ElevatedButton.icon(
+              icon: const Icon(Icons.check_circle),
+              label: const Text('Dobra'),
               onPressed: () => ctrl.answer(true),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: const Text('Dobra'),
             ),
             const SizedBox(width: 12),
-            ElevatedButton(
+            ElevatedButton.icon(
+              icon: const Icon(Icons.cancel),
+              label: const Text('Zła'),
               onPressed: () => ctrl.answer(false),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Zła'),
+
             ),
           ])
         ],

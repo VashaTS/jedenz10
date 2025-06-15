@@ -80,9 +80,10 @@ class _SetupLivesStepState extends State<SetupLivesView> {
                 label: const Text('Kategorie'),
                 onPressed: _openCategory,
               ),
-            ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/hiscore'),
-              child: const Text('Hiscore'),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.leaderboard),
+                  label: const Text('Hiscore'),
+                  onPressed: () => Navigator.pushNamed(context, '/hiscore')
             ),
           ],
         ),
@@ -120,14 +121,15 @@ class _SetupLivesStepState extends State<SetupLivesView> {
         const SizedBox(height: 20),
         Row(
           children: [
-            ElevatedButton(
+            ElevatedButton.icon(
+              icon: const Icon(Icons.arrow_forward),
+              label: const Text('Dalej'),
               onPressed: () {
                 final v = int.tryParse(_c.text) ?? ctrl.lives;
                 ctrl.setLives(v);
                 if (ctrl.players.isEmpty) ctrl.addEmptyPlayer();
                 ctrl.setPhase(GamePhase.setupPlayers);
               },
-              child: const Text('Dalej'),
             ),
             const SizedBox(width: 24),
             Row(

@@ -15,32 +15,39 @@ from pathlib import Path
 def summarize(path: str) -> None:
     category_counts = Counter()
     uncategorized = 0
+    uncategorized_rows: list[tuple[int, list[str]]] = []
     invalid_rows: list[tuple[int, list[str]]] = []
 
     with open(path, newline="", encoding="utf-8") as f:
         reader = csv.reader(f, delimiter=";")
         for line_no, row in enumerate(reader, start=1):
-            # Ignore completely empty lines
             if not row or all(cell.strip() == "" for cell in row):
                 continue
 
-            if len(row) == 2:                       # "question";"answer"
+            if len(row) == 2:
                 uncategorized += 1
-            elif len(row) == 3:                     # "question";"answer";"category"
+                uncategorized_rows.append((line_no, row))
+            elif len(row) == 3:
                 category = row[2].strip()
                 if category:
                     category_counts[category] += 1
                 else:
                     uncategorized += 1
-            else:                                   # > 3 fields → invalid
+                    uncategorized_rows.append((line_no, row))
+            else:
                 invalid_rows.append((line_no, row))
 
     # ---------- Report ----------
     if invalid_rows:
         print("⚠️  Invalid rows (more than 3 fields):")
         for line_no, row in invalid_rows:
-            joined = ";".join(row)
-            print(f"  line {line_no}: {joined}")
+            print(f"  line {line_no}: {';'.join(row)}")
+        print("-" * 60)
+
+    if uncategorized_rows:
+        print("❓ Uncategorized rows:")
+        for line_no, row in uncategorized_rows:
+            print(f"  line {line_no}: {';'.join(row)}")
         print("-" * 60)
 
     print("Category → # questions")

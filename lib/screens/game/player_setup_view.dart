@@ -56,19 +56,22 @@ class _PlayerSetupViewState extends State<PlayerSetupView> {
         ),
         Row(
           children: [
-            ElevatedButton(
+            ElevatedButton.icon(
+              icon: const Icon(Icons.person_add),
+              label: const Text('Dodaj'),
               onPressed: widget.ctrl.addEmptyPlayer,
-              child: const Text('Dodaj gracza'),
             ),
             if(widget.ctrl.players.length>1) const SizedBox(width: 5),
-            if(widget.ctrl.players.length>1) ElevatedButton(
-              onPressed: widget.ctrl.removeLastPlayer,          // ← NEW
-              child: const Text('Usuń'),
+            if(widget.ctrl.players.length>1) ElevatedButton.icon(
+              icon: const Icon(Icons.cancel),
+              label: const Text('Usuń'),
+              onPressed: widget.ctrl.removeLastPlayer,
             ),
             const SizedBox(width: 5),
-            ElevatedButton(
+            ElevatedButton.icon(
+              icon: const Icon(Icons.rocket_launch),
+              label: const Text('Start gry'),
               onPressed: widget.ctrl.startGame,
-              child: const Text('Start gry'),
             )
           ],
         ),
