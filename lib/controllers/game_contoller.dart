@@ -150,8 +150,8 @@ class GameController extends ChangeNotifier {
 
     // (optional) rebuild question pool in case the user changed filters
     _questions.applyCategorySelection(
-      {..._questions.allCategories},
-      true,
+      {..._questions.selectedCategories},
+      _questions.includeAI,
     );
 
     // go back to the first phase

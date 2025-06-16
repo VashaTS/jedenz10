@@ -48,6 +48,11 @@ class QuestionRepository extends ChangeNotifier {
   int get availableCount => _pool.length;
   int get recentCount    => _recent.length;
 
+  //prefs keys
+  final listKey = 'cat_list';
+  final hashKey = 'cat_checksum';
+  final aiKey = 'includeAI';
+
   // final _generators = <String, QuestionGenerator>{
   //   '{romanAmount}': _buildRomanAmount,
   //   // add more tokens → generator here
@@ -57,8 +62,7 @@ class QuestionRepository extends ChangeNotifier {
   // Public API ------------------------------------------------------------
   Future<void> _tryRestoreSelection() async {
     final prefs   = await SharedPreferences.getInstance();
-    final listKey = 'cat_list';
-    final hashKey = 'cat_checksum';
+
 
     final stored  = prefs.getStringList(listKey);
     final storedHash = prefs.getInt(hashKey);
@@ -72,10 +76,12 @@ class QuestionRepository extends ChangeNotifier {
       // categories list changed (or first launch) → keep default (all selected)
       selectedCategories = {...allCategories};
     }
+    includeAI = prefs.getBool(aiKey) ?? true;
   }
 
   Future<void> load() async {
     if (_ready) return;
+
     final raw = await rootBundle.loadString('assets/pytania_clean.csv');
     final lines = LineSplitter.split(raw);
     final lineRe = RegExp(r'^"([^"]*)";"([^"]*)"(;"([^"]*)")?$');
@@ -354,8 +360,6 @@ class QuestionRepository extends ChangeNotifier {
 
     // ── persist the new selection ───────────────────────────────────────────
     final prefs = await SharedPreferences.getInstance();
-    final listKey = 'cat_list';
-    final hashKey = 'cat_checksum';
 
     // store the *ordered* list for later restore
     final ordered = [...cats]..sort();
@@ -363,6 +367,8 @@ class QuestionRepository extends ChangeNotifier {
 
     // store the checksum
     await prefs.setInt(hashKey, _checksum(ordered));
+    // store the “include AI” switch
+    await prefs.setBool(aiKey, includeAI);
   }
 
   // ---------------------------------------------------------------------
