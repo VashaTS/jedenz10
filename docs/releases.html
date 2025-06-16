@@ -4,7 +4,6 @@
     <meta charset="utf-8" />
     <title>Jeden z Dziesięciu — pobieranie</title>
 
-    <!-- Small, clean styling so the page looks OK without extra CSS files -->
     <style>
         :root {
           --accent: #1565c0;
@@ -18,20 +17,31 @@
         .list  { display: grid; gap: 1.25rem; max-width: 600px; }
         .item  { background: var(--card); border: 1px solid var(--border);
                  border-radius: 8px; padding: 1.25rem; }
-        .item h2 { margin: .25rem 0 0.5rem; font-size: 1.15rem; }
+        .item h2 { margin: .25rem 0 0.5rem; font-size: 1.15rem; display: flex; align-items:center; gap:.4rem; }
         .item a { color: var(--accent); text-decoration: none; word-break: break-all; }
         .item a:hover { text-decoration: underline; }
+        .ico   { width: 20px; height: 20px; vertical-align: text-bottom; }
         footer { margin-top: 2.5rem; font-size: .85rem; color: #666; }
     </style>
 </head>
 
 <body>
-<h1>Jeden z Dziesięciu — wersje aplikacji</h1>
+<h1>Jeden z Dziesięciu  — wersje aplikacji</h1>
 
 <section class="list">
+
     <!-- Google Play -->
     <div class="item">
-        <h2>Android — sklep Google Play</h2>
+        <h2>
+            <!-- tiny Play Store icon -->
+            <svg class="ico" viewBox="0 0 512 512">
+                <path fill="#34a853" d="M44 15 310 281 260 331 44 115Z"/>
+                <path fill="#4285f4" d="M44 497 260 281 310 331 44 497Z"/>
+                <path fill="#fbbc04" d="M44 15 260 231 310 181 44 15Z"/>
+                <path fill="#ea4335" d="m310 181 158 88-158 88-50-50 50-50-50-50Z"/>
+            </svg>
+            Android — sklep Google Play
+        </h2>
         <a href="https://play.google.com/store/apps/details?id=net.szymonmarciniak.jeden_z_dziesieciu_v2">
             Otwórz w Google Play
         </a>
@@ -39,7 +49,13 @@
 
     <!-- Microsoft Store -->
     <div class="item">
-        <h2>Windows 11/10 — Microsoft Store</h2>
+        <h2>
+            <!-- Windows logo -->
+            <svg class="ico" viewBox="0 0 24 24">
+                <path fill="#00a4ef" d="M1 3h10v8H1zM13 3h10v8H13zM1 13h10v8H1zM13 13h10v8H13z"/>
+            </svg>
+            Windows 11/10 — Microsoft Store
+        </h2>
         <a href="ms-windows-store://pdp/?productid=9MTCH82H1HVP">
             Otwórz w Microsoft Store
         </a>
@@ -47,7 +63,14 @@
 
     <!-- Web -->
     <div class="item">
-        <h2>Wersja przeglądarkowa</h2>
+        <h2>
+            <!-- globe icon -->
+            <svg class="ico" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" fill="#4caf50"/>
+                <path fill="#fff" d="M4 12h16M12 4a16 16 0 0 1 0 16M12 4a16 16 0 0 0 0 16"/>
+            </svg>
+            Wersja przeglądarkowa
+        </h2>
         <a href="https://jedenz10-566b9.web.app/">
             Uruchom w przeglądarce
         </a>
@@ -55,24 +78,42 @@
 
     <!-- APK sideload -->
     <div class="item">
-        <h2>Android — APK (instalacja ręczna)</h2>
+        <h2>
+            <!-- little Android robot -->
+            <svg class="ico" viewBox="0 0 24 24">
+                <path fill="#a4c639" d="M17 8h3v8h-3zm-13 0h3v8H4z"/>
+                <path fill="#a4c639" d="M7 8h10v8H7z"/>
+                <circle cx="9" cy="10" r="1" fill="#fff"/>
+                <circle cx="15" cy="10" r="1" fill="#fff"/>
+                <path fill="#a4c639" d="m8 4 1-2 1 1-1 2zm7 0-1-2-1 1 1 2z"/>
+            </svg>
+            Android — APK (instalacja ręczna)
+        </h2>
         <a href="https://github.com/VashaTS/jedenz10/releases/download/2025-06-16/app-release_0616_1.apk">
             Pobierz APK
         </a>
     </div>
 
-    <!-- EXE / 7-Zip sideload -->
+    <!-- EXE sideload -->
     <div class="item">
-        <h2>Windows — wersja EXE (sideload)</h2>
+        <h2>
+            <!-- simple Windows PC icon -->
+            <svg class="ico" viewBox="0 0 24 24">
+                <rect x="2" y="4" width="20" height="14" rx="2" fill="#2196f3"/>
+                <rect x="4" y="6" width="16" height="10" fill="#fff"/>
+                <rect x="8" y="18" width="8" height="2" fill="#2196f3"/>
+            </svg>
+            Windows — EXE (sideload)
+        </h2>
         <a href="https://github.com/VashaTS/jedenz10/releases/download/2025-06-16/Win_x64_0616_1.7z">
             Pobierz archiwum 7-Zip
         </a>
     </div>
+
 </section>
 
 <footer>
-    © 2025 Szymon Marciniak • Niniejsza strona jest statyczna — wszystkie pliki hostowane są w Google Play,
-    Microsoft Store lub GitHub Releases.
+    © 2025&nbsp;Szymon&nbsp;Marciniak • Statyczna strona GitHub Pages
 </footer>
 </body>
 </html>
