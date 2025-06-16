@@ -227,7 +227,7 @@ class QuestionRepository extends ChangeNotifier {
                   return Question(
                     'Ile to jest 1/$d × 1/$d?',
                     '1/$simp',
-                    c!,
+                    c,
                     musicAsset: musicAsset,
                   );
                 })
@@ -238,12 +238,12 @@ class QuestionRepository extends ChangeNotifier {
                 _GeneratedQ(c!,(){
                   final a = parsed.rand(); // base
                   final b = parsed.rand(); // exponent
-                  final result = pow(a, b)!.toInt();
+                  final result = pow(a, b).toInt();
 
                   return Question(
                     'Ile wynosi $a do potęgi $b?',
                     '$result',
-                    c!,
+                    c,
                     musicAsset: musicAsset,
                   );
                 })
@@ -258,7 +258,7 @@ class QuestionRepository extends ChangeNotifier {
                   return Question(
                     'Ile wynosi średnica okręgu o r=$r cm?',
                     '$d',
-                    c!,
+                    c,
                     musicAsset: musicAsset,
                   );
                 })

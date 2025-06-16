@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8" />
+    <title>Jeden z Dziesięciu — pobieranie</title>
+
+    <!-- Small, clean styling so the page looks OK without extra CSS files -->
+    <style>
+        :root {
+          --accent: #1565c0;
+          --bg: #fafafa;
+          --card: #fff;
+          --border: #e0e0e0;
+          font-family: system-ui, sans-serif;
+        }
+        body   { background: var(--bg); margin: 0; padding: 2rem; }
+        h1     { color: var(--accent); margin-top: 0; }
+        .list  { display: grid; gap: 1.25rem; max-width: 600px; }
+        .item  { background: var(--card); border: 1px solid var(--border);
+                 border-radius: 8px; padding: 1.25rem; }
+        .item h2 { margin: .25rem 0 0.5rem; font-size: 1.15rem; }
+        .item a { color: var(--accent); text-decoration: none; word-break: break-all; }
+        .item a:hover { text-decoration: underline; }
+        footer { margin-top: 2.5rem; font-size: .85rem; color: #666; }
+    </style>
+</head>
+
+<body>
+<h1>Jeden z Dziesięciu — wersje aplikacji</h1>
+
+<section class="list">
+    <!-- Google Play -->
+    <div class="item">
+        <h2>Android — sklep Google Play</h2>
+        <a href="https://play.google.com/store/apps/details?id=net.szymonmarciniak.jeden_z_dziesieciu_v2">
+            Otwórz w Google Play
+        </a>
+    </div>
+
+    <!-- Microsoft Store -->
+    <div class="item">
+        <h2>Windows 11/10 — Microsoft Store</h2>
+        <a href="ms-windows-store://pdp/?productid=9MTCH82H1HVP">
+            Otwórz w Microsoft Store
+        </a>
+    </div>
+
+    <!-- Web -->
+    <div class="item">
+        <h2>Wersja przeglądarkowa</h2>
+        <a href="https://jedenz10-566b9.web.app/">
+            Uruchom w przeglądarce
+        </a>
+    </div>
+
+    <!-- APK sideload -->
+    <div class="item">
+        <h2>Android — APK (instalacja ręczna)</h2>
+        <a href="https://github.com/VashaTS/jedenz10/releases/download/2025-06-16/app-release_0616_1.apk">
+            Pobierz APK
+        </a>
+    </div>
+
+    <!-- EXE / 7-Zip sideload -->
+    <div class="item">
+        <h2>Windows — wersja EXE (sideload)</h2>
+        <a href="https://github.com/VashaTS/jedenz10/releases/download/2025-06-16/Win_x64_0616_1.7z">
+            Pobierz archiwum 7-Zip
+        </a>
+    </div>
+</section>
+
+<footer>
+    © 2025 Szymon Marciniak • Niniejsza strona jest statyczna — wszystkie pliki hostowane są w Google Play,
+    Microsoft Store lub GitHub Releases.
+</footer>
+</body>
+</html>
