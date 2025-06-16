@@ -1,5 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:jeden_z_dziesieciu/repositories/question_repository.dart';
+import 'package:jeden_z_dziesieciu/screens/about_screen.dart';
+import 'package:jeden_z_dziesieciu/widgets/web_view_screen.dart';
 import 'controllers/game_contoller.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
@@ -48,12 +50,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Jeden z Dziesięciu V3',
+      title: 'Jeden z Dziesięciu',
       debugShowCheckedModeBanner: false,
       routes: {
         '/':        (_) => const GameScreen(),
         '/settings':(_) => const SettingsScreen(),
         '/hiscore': (_) => const HighscoreScreen(),
+        '/about':     (_) => const AboutScreen(),
+        '/privacy': (_) => const WebViewScreen(
+          url: 'https://vashats.github.io/jedenz10/privacypolicy.html',
+        ),
       },
     );
 

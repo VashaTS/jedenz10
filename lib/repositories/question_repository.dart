@@ -53,12 +53,8 @@ class QuestionRepository extends ChangeNotifier {
   final hashKey = 'cat_checksum';
   final aiKey = 'includeAI';
 
-  // final _generators = <String, QuestionGenerator>{
-  //   '{romanAmount}': _buildRomanAmount,
-  //   // add more tokens → generator here
-  // };
-  static int _gcd(int a, int b) => b == 0 ? a : _gcd(b, a % b);
-  // final _musicToken = RegExp(r'^\{music:([^}]+)\}\s*', caseSensitive: false);
+  // static int _gcd(int a, int b) => b == 0 ? a : _gcd(b, a % b);
+
   // Public API ------------------------------------------------------------
   Future<void> _tryRestoreSelection() async {
     final prefs   = await SharedPreferences.getInstance();

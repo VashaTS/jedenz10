@@ -33,6 +33,12 @@ class GameScreen extends StatelessWidget {
                    : null,
             actions: [
               IconButton(
+                icon: const Icon(Icons.info_outline),
+                tooltip: 'O aplikacji',
+                onPressed: () => Navigator.pushNamed(context, '/about'),
+              ),
+              IconButton(
+                tooltip: 'Ustawienia',
                 icon: const Icon(Icons.settings),
                 onPressed: () => Navigator.pushNamed(context, '/settings'),
               )
