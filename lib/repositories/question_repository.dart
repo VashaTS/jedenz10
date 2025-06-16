@@ -146,13 +146,13 @@ class QuestionRepository extends ChangeNotifier {
               return Question(
                 '$prefix$qPart$suffix',
                 aPart,
-                c!,
+                c,
                 musicAsset: musicAsset,
               );
             })
           );
 
-          if (c!.isNotEmpty) {
+          if (c.isNotEmpty) {
             cats.add(c);
             counts[c] = (counts[c] ?? 0) + 1;
           }
@@ -171,7 +171,7 @@ class QuestionRepository extends ChangeNotifier {
                   return Question(
                     'Ilu cyfr rzymskich użyjemy do zapisania liczby $n?',
                     '${roman.length} ($roman)',
-                    c!,
+                    c,
                     musicAsset: musicAsset,
                   );
                 })
@@ -185,7 +185,7 @@ class QuestionRepository extends ChangeNotifier {
                   return Question(
                     'Rok $year – który to wiek?',
                     '${_toRoman(century)} ($century)',
-                    c!,
+                    c,
                   );
                 })
               );
@@ -199,7 +199,7 @@ class QuestionRepository extends ChangeNotifier {
                   return Question(
                     'Ile wynosi $n silnia?',
                     '$f',
-                    c!,
+                    c,
                     musicAsset: musicAsset,
                   );
                 })
@@ -213,7 +213,7 @@ class QuestionRepository extends ChangeNotifier {
                 return Question(
                 'Największa naturalna liczba $digitCount-cyfrowa to…',
                 '$max',
-                c!,
+                c,
                 );
                 })
               );
