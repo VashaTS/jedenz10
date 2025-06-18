@@ -93,6 +93,14 @@ class GameController extends ChangeNotifier {
     }
   }
 
+  // Remove player at arbitrary index
+  void removePlayer(int idx) {
+    if (idx >= 0 && idx < players.length) {
+      players.removeAt(idx);
+      notifyListeners();
+    }
+  }
+
   // Skip the current question – go back to the player grid.
   void skipQuestion() {
     _countdown?.cancel();
@@ -286,7 +294,7 @@ class GameController extends ChangeNotifier {
       p.points += p.lives;     // 1 life → 1 point
       p.lives  = 3;            // reset lives for finale
     }
-    players.removeWhere((p) => p.lives == 0);
+    // players.removeWhere((p) => p.lives == 0);
   }
 
   void undoLast() {

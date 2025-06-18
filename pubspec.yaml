@@ -1,7 +1,7 @@
 name: jeden_z_dziesieciu
 description: A quiz app inspired by '1 z 10'
 publish_to: 'none'
-version: 1.4.4+11
+version: 1.4.5+12
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -32,7 +32,7 @@ msix_config:
   identity_name: "SzymonMarciniak.Jedenz10"
   publisher: "CN=2B5101A8-1EBF-4B6B-975B-D11F77F68088"
   publisher_display_name: "Szymon Marciniak"
-  msix_version: 1.4.4.0
+  msix_version: 1.4.5.0
   certificate_path: "c:/users/sajmo/store_cert.pfx"      # or wherever you saved it
   certificate_password: "00000"
   replace_icons: true

@@ -47,8 +47,14 @@ class _PlayerSetupViewState extends State<PlayerSetupView> {
                   ),
                 ),
                 IconButton(
+                  tooltip: 'Zmień zdjęcie',
                   onPressed: () => _pick(i),
                   icon: CircleAvatar(backgroundImage: p.icon, radius: 20),
+                ),
+                IconButton(
+                  tooltip: 'Usuń tego gracza',
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => widget.ctrl.removePlayer(i),
                 ),
               ]);
             },
@@ -58,15 +64,15 @@ class _PlayerSetupViewState extends State<PlayerSetupView> {
           children: [
             ElevatedButton.icon(
               icon: const Icon(Icons.person_add),
-              label: const Text('Dodaj'),
+              label: const Text('Dodaj gracza'),
               onPressed: widget.ctrl.addEmptyPlayer,
             ),
-            if(widget.ctrl.players.length>1) const SizedBox(width: 5),
-            if(widget.ctrl.players.length>1) ElevatedButton.icon(
-              icon: const Icon(Icons.cancel),
-              label: const Text('Usuń'),
-              onPressed: widget.ctrl.removeLastPlayer,
-            ),
+            // if(widget.ctrl.players.length>1) const SizedBox(width: 5),
+            // if(widget.ctrl.players.length>1) ElevatedButton.icon(
+            //   icon: const Icon(Icons.cancel),
+            //   label: const Text('Usuń'),
+            //   onPressed: widget.ctrl.removeLastPlayer,
+            // ),
             const SizedBox(width: 5),
             ElevatedButton.icon(
               icon: const Icon(Icons.rocket_launch),
