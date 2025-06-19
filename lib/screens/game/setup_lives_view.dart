@@ -109,9 +109,8 @@ class _SetupLivesStepState extends State<SetupLivesView> {
               onPressed: () {
                 final v = i + 2; // buttons 2‑6
                 ctrl.setLives(v);
-                if (ctrl.players.isEmpty) {
-                  ctrl.addEmptyPlayer();
-                }
+                if (ctrl.players.isEmpty) ctrl.addEmptyPlayer();
+                else for (final p in ctrl.players) p.lives = ctrl.lives;
                 ctrl.setPhase(GamePhase.setupPlayers);
               },
               child: Text('${i + 2}'),
@@ -128,6 +127,7 @@ class _SetupLivesStepState extends State<SetupLivesView> {
                 final v = int.tryParse(_c.text) ?? ctrl.lives;
                 ctrl.setLives(v);
                 if (ctrl.players.isEmpty) ctrl.addEmptyPlayer();
+                else for (final p in ctrl.players) p.lives = ctrl.lives;
                 ctrl.setPhase(GamePhase.setupPlayers);
               },
             ),

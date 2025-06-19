@@ -8,6 +8,7 @@ class GameSettings extends ChangeNotifier {
   int timeSeconds;
   int recencyWindow;
   bool autoFail;
+  bool keepPlayers;
 
   final SharedPreferences _prefs;
 
@@ -19,6 +20,7 @@ class GameSettings extends ChangeNotifier {
       required this.timeSeconds,
       required this.recencyWindow,
       required this.autoFail,
+      required this.keepPlayers,
   });
 
   static Future<GameSettings> load() async {
@@ -31,6 +33,7 @@ class GameSettings extends ChangeNotifier {
       timeSeconds    : p.getInt  ('timeSeconds')   ?? 15,
       recencyWindow  : p.getInt  ('recencyWindow') ?? 10,
       autoFail       : p.getBool ('autoFail')      ?? false,
+      keepPlayers    : p.getBool ('keepPlayers')   ?? false,
     );
   }
   Future<void> toggleSound() async {
@@ -69,4 +72,9 @@ class GameSettings extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> toggleKeepPlayers() async {
+    keepPlayers = !keepPlayers;
+    await _prefs.setBool('keepPlayers', keepPlayers);
+    notifyListeners();
+  }
 }

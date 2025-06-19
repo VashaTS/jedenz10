@@ -97,6 +97,13 @@ class SettingsScreen extends StatelessWidget {
               const Text(' pytań'),
             ],
           ),
+          const Divider(),
+          SwitchListTile(
+            title: const Text('Nie usuwaj graczy'),
+            subtitle: const Text('Przy nowej grze zostaw istniejących'),
+            value: gs.keepPlayers,
+            onChanged: (_) => gs.toggleKeepPlayers(),
+          ),
         ],
       ),
     );

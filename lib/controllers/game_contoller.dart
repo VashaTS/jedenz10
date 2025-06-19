@@ -71,16 +71,21 @@ class GameController extends ChangeNotifier {
   }
 
   // ──────────────────────────── lives setup (step‑0) ──────────────────────
-  void setLives(int v) {
+  void setLives(int v, {bool syncExisting = false}) {
     if (v <= 0) return;
     lives = v;
+    if (syncExisting) {
+      for (final p in players) {
+        p.lives = v;
+      }
+    }
     notifyListeners();
   }
 
   void setTournament(bool value) {
     tournament = value;
     if (tournament) {
-      setLives(3);                         // force 3 lives
+      setLives(3,syncExisting: true);                         // force 3 lives
     }
     notifyListeners();
   }
@@ -145,25 +150,34 @@ class GameController extends ChangeNotifier {
 
     // reset simple state
     lives           = _settings.defaultLives;
-    players.clear();
+    if(_settings.keepPlayers) {
+      for (final p in players){
+        p.lives = lives;
+        p.answeredCount = 0;
+        p.correctAnswers = 0;
+        p.points = 0;
+      }
+    }
+    else {
+      players.clear();
+    }
     currentPlayer   = null;
     currentQuestion = null;
     showAnswer      = false;
     _lastAction     = null;
     remainingSeconds = 0;
     _finaleLeft = 40;
-
-
     _tourRound = TourRound.none;
 
-    // (optional) rebuild question pool in case the user changed filters
-    _questions.applyCategorySelection(
-      {..._questions.selectedCategories},
-      _questions.includeAI,
-    );
+      // (optional) rebuild question pool in case the user changed filters
+      _questions.applyCategorySelection(
+        {..._questions.selectedCategories},
+        _questions.includeAI,
+      );
 
-    // go back to the first phase
-    setPhase(GamePhase.setupLives);
+      // go back to the first phase
+      setPhase(GamePhase.setupLives);
+
   }
 
   void playClip(String asset) {
