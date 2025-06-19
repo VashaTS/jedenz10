@@ -314,18 +314,21 @@ class QuestionRepository extends ChangeNotifier {
   Question next() {
     if (_pool.isEmpty) _recycle();
     _pool.shuffle();
+    Object item;
+    int tries = _pool.length;
+    do {
+      item = _pool.removeLast();
+      if (!_recent.contains(item)) break;
+      _pool.insert(0, item);                // put it back to front
+    } while (--tries > 0);
 
-    final item = _pool.removeLast();
     late Question q;
-
     if (item is _GeneratedQ) {
-      // on-the-fly question – build it now
       q = item.build();
     } else if (item is Question) {
-      // regular, pre-made question from CSV
       q = item;
     } else {
-      throw StateError('Unknown item type in pool: $item');
+      throw StateError('Unknown item type: $item');
     }
 
     // remember what we just used (keep the wrapper for generators!)
@@ -339,6 +342,7 @@ class QuestionRepository extends ChangeNotifier {
 
   /// Quick converter good up to 3999
   static String _toRoman(int num) {
+    if(num>3999) return 'Error';
     const nums  = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
     const romans= ['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];
     var n = num;

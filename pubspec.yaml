@@ -1,7 +1,7 @@
 name: jeden_z_dziesieciu
 description: A quiz app inspired by '1 z 10'
 publish_to: 'none'
-version: 1.4.7+14
+version: 1.4.9+16
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -21,6 +21,7 @@ dependencies:
   cloud_firestore: ^5.0.1
   webview_flutter: ^4.7.0    # or lates
   webview_windows: ^0.4.0
+  package_info_plus: ^8.3.0
 
 dev_dependencies:
   flutter_test:
@@ -32,7 +33,7 @@ msix_config:
   identity_name: "SzymonMarciniak.Jedenz10"
   publisher: "CN=2B5101A8-1EBF-4B6B-975B-D11F77F68088"
   publisher_display_name: "Szymon Marciniak"
-  msix_version: 1.4.7.0
+  msix_version: 1.4.9.0
   certificate_path: "c:/users/sajmo/store_cert.pfx"      # or wherever you saved it
   certificate_password: "00000"
   replace_icons: true
@@ -51,6 +52,7 @@ flutter:
     - assets/wrong.mp3
     - assets/start.mp3
     - assets/end.mp3
+    - assets/eliminated.mp3
     - assets/imagine.mp3
     - assets/smells_like_teen_spirit.mp3
     - assets/thriller.mp3

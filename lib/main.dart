@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:jeden_z_dziesieciu/repositories/question_repository.dart';
 import 'package:jeden_z_dziesieciu/screens/about_screen.dart';
+import 'package:jeden_z_dziesieciu/services/app_info_service.dart';
 import 'package:jeden_z_dziesieciu/widgets/web_view_screen.dart';
 import 'controllers/game_contoller.dart';
 import 'firebase_options.dart';
@@ -14,6 +15,7 @@ import 'screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final appInfo = AppInfoService();
   final settings = await GameSettings.load();
   // await settings.load();
   await Firebase.initializeApp(
@@ -22,6 +24,13 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider<AppInfoService>(
+          create: (_) {
+            final svc = AppInfoService();
+            svc.init();                       // fire-and-forget
+            return svc;
+          },
+        ),
         // 0️⃣  the single, already-loaded instance
         ChangeNotifierProvider.value(value: settings),
 

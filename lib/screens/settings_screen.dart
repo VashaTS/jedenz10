@@ -104,6 +104,14 @@ class SettingsScreen extends StatelessWidget {
             value: gs.keepPlayers,
             onChanged: (_) => gs.toggleKeepPlayers(),
           ),
+          SwitchListTile(
+            title: const Text('Zapisuj na urządzniu'),
+            subtitle: const Text('Lista graczy będzie przywracana przy uruchamieniu aplikacji'),
+            value: gs.savePlayers,
+            onChanged: gs.keepPlayers
+                ? (_) => gs.toggleSavePlayers()
+                : null,
+          ),
         ],
       ),
     );

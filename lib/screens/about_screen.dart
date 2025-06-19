@@ -1,5 +1,8 @@
 // lib/screens/about_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../services/app_info_service.dart';
 
 // ───── helper model ───────────────────────────────────────────
 class Contributor {
@@ -31,6 +34,7 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final version = context.watch<AppInfoService>().version;
     return Scaffold(
       appBar: AppBar(
         title: const Text('O aplikacji / Podziękowania'),
@@ -44,6 +48,7 @@ class AboutScreen extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
+          Text('Wersja ${version}', textAlign: TextAlign.center,),
           const SizedBox(height: 24),
           const Text(
             'Współtwórcy pytań:',

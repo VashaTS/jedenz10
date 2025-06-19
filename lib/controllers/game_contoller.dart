@@ -14,6 +14,7 @@ import 'package:jeden_z_dziesieciu/services/highscore_service.dart';
 
 import '../models/question.dart';
 import '../services/audio_service.dart';
+import '../services/player_store.dart';
 
 
 /// Logical stages of the game. The UI decides which widget to show for each
@@ -62,7 +63,24 @@ class GameController extends ChangeNotifier {
   GameController(this._settings, this._questions)
       : lives = _settings.defaultLives,
         // _questions = QuestionRepository(_settings),
-        _audio = AudioService(_settings);
+        _audio = AudioService(_settings){
+    if (_settings.savePlayers) {
+      _restorePlayers();            // ← try reading on start-up
+    }
+  }
+
+  Future<void> _restorePlayers() async {
+    players
+      ..clear()
+      ..addAll(await PlayerStore.restore());
+    // give everybody current number of lives
+    for (final p in players) p.lives = lives;
+  }
+
+// call this whenever the roster changes
+  Future<void> _persistPlayers() async {
+    if (_settings.savePlayers) await PlayerStore.save(players);
+  }
 
   // ───────────────────────────── phase helpers ────────────────────────────
   void setPhase(GamePhase p) {
@@ -94,6 +112,7 @@ class GameController extends ChangeNotifier {
   void removeLastPlayer() {
     if (players.isNotEmpty) {
       players.removeLast();
+      _persistPlayers();
       notifyListeners();
     }
   }
@@ -102,6 +121,7 @@ class GameController extends ChangeNotifier {
   void removePlayer(int idx) {
     if (idx >= 0 && idx < players.length) {
       players.removeAt(idx);
+      _persistPlayers();
       notifyListeners();
     }
   }
@@ -118,13 +138,15 @@ class GameController extends ChangeNotifier {
   // ────────────────────────── player setup (step‑1) ───────────────────────
   void addEmptyPlayer() {
     players.add(Player('', const AssetImage('assets/default_icon_new.png'), lives));
+    _persistPlayers();
     notifyListeners();
   }
 
   void updatePlayer(int idx, {String? name, ImageProvider? avatar}) {
     final p = players[idx];
     players[idx] = Player(name ?? p.name, avatar ?? p.icon, p.lives,
-        answeredCount: p.answeredCount, correctAnswers: p.correctAnswers);
+        answeredCount: p.answeredCount, correctAnswers: p.correctAnswers, points: p.points);
+    _persistPlayers();
     notifyListeners();
   }
 
@@ -272,7 +294,7 @@ class GameController extends ChangeNotifier {
       currentPlayer!.correctAnswers++;
       if (tournament && _tourRound == TourRound.finale) {
          final bonus =
-             (currentPlayer == _lastFinaleWinner) ? 20 : 10; // self-select bonus
+             ((currentPlayer == _lastFinaleWinner) && (players.where((p)=> p.lives >0).length>1)) ? 20 : 10; // self-select bonus
          currentPlayer!.points += bonus;
          _lastFinaleWinner = currentPlayer;                  // remember winner
        } else {
@@ -280,14 +302,15 @@ class GameController extends ChangeNotifier {
        }
     } else {
       _lastFinaleWinner = null;
-      if(_settings.soundEnabled) _audio.playWrong();
       currentPlayer!.lives--;
       if (tournament && _tourRound == TourRound.round1) {
         if (currentPlayer!.lives == 1) {
-          //maybe -1, but probably already done
           currentPlayer!.lives--;
         }
       }
+      if(_settings.soundEnabled) _audio.playWrong().then((_) {
+        if (currentPlayer!.lives == 0) _audio.playEliminated();
+      });
     }
     currentPlayer!.answeredCount++;
 
@@ -424,6 +447,7 @@ class GameController extends ChangeNotifier {
     _audio.dispose();
     super.dispose();
   }
+
 }
 
 class _LastAction {

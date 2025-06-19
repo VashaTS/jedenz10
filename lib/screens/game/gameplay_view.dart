@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../controllers/game_contoller.dart';
 import '../../models/game_settings.dart';
+import '../../services/app_info_service.dart';
 import '../../services/audio_service.dart';
 
 class GameplayView extends StatelessWidget {
@@ -16,6 +17,7 @@ class GameplayView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final version = context.watch<AppInfoService>().version;
     final gs   = context.watch<GameSettings>();
     final ctrl  = context.watch<GameController>();
 
@@ -149,7 +151,7 @@ class GameplayView extends StatelessWidget {
                     '\nKategoria: ${q.category}';
 
                 final body = Uri.encodeComponent(
-                  'Pytanie: ${q.text}\nOdpowiedź: ${q.answer}\n\nTwoje uwagi:\n\n\n\n--\nWersja aplikacji: 1.4.0\n--',
+                  'Pytanie: ${q.text}\nOdpowiedź: ${q.answer}\n\nTwoje uwagi:\n\n\n\n--\nWersja aplikacji: ${version}\n--',
                 );
 
                 final uri = Uri.parse(
