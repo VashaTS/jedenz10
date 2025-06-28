@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/game_settings.dart';
+import '../services/theme_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -111,6 +112,15 @@ class SettingsScreen extends StatelessWidget {
             onChanged: gs.keepPlayers
                 ? (_) => gs.toggleSavePlayers()
                 : null,
+          ),
+          const Divider(),
+          Consumer<ThemeService>(
+            builder: (_, themeSvc, __) => SwitchListTile(
+              title: const Text('Tryb ciemny'),
+              value: themeSvc.isDark,
+              onChanged: (_) => themeSvc.toggle(),
+              secondary: const Icon(Icons.brightness_6_outlined),
+            ),
           ),
         ],
       ),

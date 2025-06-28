@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:jeden_z_dziesieciu/repositories/question_repository.dart';
 import 'package:jeden_z_dziesieciu/screens/about_screen.dart';
 import 'package:jeden_z_dziesieciu/services/app_info_service.dart';
+import 'package:jeden_z_dziesieciu/services/theme_service.dart';
 import 'package:jeden_z_dziesieciu/widgets/web_view_screen.dart';
 import 'controllers/game_contoller.dart';
 import 'firebase_options.dart';
@@ -47,6 +48,7 @@ void main() async {
           ),
           update: (_, __, ctrl) => ctrl!,
         ),
+        ChangeNotifierProvider(create: (_) => ThemeService()),
       ],
       child: const MyApp(),
     ),
@@ -58,9 +60,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeService>().isDark;
+
+    // --- colour seeds -----------------------------------------------------
+    const seed = Colors.blue;
+    final lightScheme = ColorScheme.fromSeed(seedColor: seed);
+    final darkScheme  = ColorScheme.fromSeed(
+      seedColor: seed,
+      brightness: Brightness.dark,
+    );
     return MaterialApp(
       title: 'Jeden z Dziesięciu',
       debugShowCheckedModeBanner: false,
+      // Material 3 is now requested via the helpers:
+      theme:     ThemeData.from( colorScheme: lightScheme, useMaterial3: true ),
+      darkTheme: ThemeData.from( colorScheme: darkScheme,  useMaterial3: true ),
+
+      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
       routes: {
         '/':        (_) => const GameScreen(),
         '/settings':(_) => const SettingsScreen(),
