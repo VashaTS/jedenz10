@@ -1,48 +1,39 @@
 import java.util.Properties
 
-val keystoreProps: Properties by lazy {
-    Properties().apply {
-        val propsFile = rootProject.file("key.properties")
-        if (propsFile.exists()) {
-            load(propsFile.inputStream())
-        } else {
-            throw GradleException(
-                "Missing key.properties.  Create it next to build.gradle.kts."
-            )
-        }
+val keystorePropsFile = rootProject.file("key.properties")
+val keystoreProps: Properties? =
+    if (keystorePropsFile.exists()) {
+        Properties().apply { load(keystorePropsFile.inputStream()) }
+    } else {
+        logger.warn(
+            "key.properties was not found; the release build will be signed with the debug keystore. " +
+                "Place key.properties (gitignored) next to settings.gradle.kts to use the Play upload key.",
+        )
+        null
     }
-}
 
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
     id("com.google.gms.google-services")
     // END: FlutterFire Configuration
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
-
 
 android {
     namespace = "net.szymonmarciniak.jeden_z_dziesieciu_v2"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
-    ndkVersion = "27.0.12077973"
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "net.szymonmarciniak.jeden_z_dziesieciu_v2"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -50,28 +41,37 @@ android {
     }
 
     signingConfigs {
-        // NEW release signing config
-        create("release") {
-            storeFile = file(keystoreProps["storeFile"] as String)
-            storePassword = keystoreProps["storePassword"] as String
-            keyAlias = keystoreProps["keyAlias"] as String
-            keyPassword = keystoreProps["keyPassword"] as String
+        if (keystoreProps != null) {
+            create("release") {
+                storeFile = file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
         }
     }
 
     buildTypes {
         getByName("release") {
-            // Switch from debug keys to your new release config
-            signingConfig = signingConfigs.getByName("release")
-
-            // Optional but recommended: shrink and obfuscate
+            signingConfig =
+                if (keystoreProps != null) {
+                    signingConfigs.getByName("release")
+                } else {
+                    signingConfigs.getByName("debug")
+                }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 
