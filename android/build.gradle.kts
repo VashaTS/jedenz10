@@ -19,3 +19,13 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
+// image_picker_android's lintVital task crashes on this JDK/AGP combination
+// (CommentDetector / List.removeLast). That check is not required to produce a bundle.
+subprojects {
+    tasks.configureEach {
+        if (name.contains("lintVital", ignoreCase = true)) {
+            enabled = false
+        }
+    }
+}

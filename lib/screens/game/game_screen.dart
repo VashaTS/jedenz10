@@ -2,6 +2,7 @@
 //  file: lib/screens/game/game_screen.dart
 // ===============================
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:jeden_z_dziesieciu/models/game_settings.dart';
 import '../../controllers/game_contoller.dart';
@@ -25,6 +26,11 @@ class GameScreen extends StatelessWidget {
           appBar: AppBar(
             title: const Text('Jeden z dziesięciu'),
             backgroundColor: Colors.blue,
+            systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+              statusBarColor: Colors.transparent,
+              systemNavigationBarColor: Colors.transparent,
+              systemNavigationBarDividerColor: Colors.transparent,
+            ),
               leading: ctrl.phase == GamePhase.setupPlayers
                   ? IconButton(
                     icon: const Icon(Icons.arrow_back),
